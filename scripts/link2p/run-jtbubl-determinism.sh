@@ -90,7 +90,14 @@ for pattern in "${patterns[@]}"; do
 done
 
 container_work=/jtcores/cores/bubl/ver/link2p-determinism
-jtsim_args=(-verilator -load -dipsw ffff -video "${frames}" -fast -batch)
+simulation_frames=${frames}
+if [[ -n ${reset_delay} ]]; then
+    # MAXFRAME is measured from ROM-download completion, while CRC evidence is
+    # intentionally suppressed until the delayed common reset is released.
+    # Leave ample terminal frames so the evidence still contains >=10,000.
+    simulation_frames=$((frames + 60))
+fi
+jtsim_args=(-verilator -load -dipsw ffff -video "${simulation_frames}" -fast -batch)
 if [[ -n ${reset_delay} ]]; then
     jtsim_args+=(-d "RST_DLY=${reset_delay}")
 fi
@@ -200,6 +207,7 @@ done
 {
     printf 'mode=%s\n' "${mode}"
     printf 'requested_frames=%s\n' "${frames}"
+    printf 'simulator_frame_limit=%s\n' "${simulation_frames}"
     printf 'patterns=%s\n' "${patterns[*]}"
     printf 'reset_delay_ms=%s\n' "${reset_delay:-default-after-download}"
     printf 'verilator_threads=%s\n' "${verilator_threads}"
