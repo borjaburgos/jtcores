@@ -443,6 +443,10 @@ diagnostic video timer. The protocol port was renamed from `ext_vblank` to
 
 The protocol test now drives independently phased Host and Join launch
 boundaries, including reversed release order during reconnect. All five
-Link2P unit tests and integrated Pocket lint pass. Diagnostic Host/Join Quartus
-rebuilds, package refresh, SD reinstall, and a second physical run are next;
-the complete transport gate and gameplay remain unverified.
+Link2P unit tests and integrated Pocket lint pass. Corrected Diagnostic Host
+and Join Quartus builds pass seed 0 with +0.119 ns and +0.122 ns worst slack;
+their RBF SHA-256 values are
+`a35f27dcec68a83ba479f28ecd81f9a8b21c0e8c09c0bcf342ceb5f4a9a4abd5`
+and `c7f28b0437d74be131017b8eac176cc3d8a00465e1619f395b8b0a9fdff266ac`.
+Package refresh, SD reinstall, and a second physical run are next; the
+complete transport gate and gameplay remain unverified.

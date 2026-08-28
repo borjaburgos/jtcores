@@ -228,6 +228,18 @@ Pocket top-level `vblank` input, which is Dock-driven and remains idle in this
 handheld setup. The correction uses the always-running Link2P diagnostic
 timer's local blanking interval instead. Unit coverage now phases Host and
 Join launch boundaries independently to model two undocked Pockets. The full
-five-test Link2P suite and integrated Pocket lint pass; rebuilt bitstreams and
-a second physical diagnostic run remain required before claiming the complete
-transport gate.
+five-test Link2P suite and integrated Pocket lint pass.
+
+Corrected diagnostic synthesis also passes from JTCORES commit
+`1fd09c44d5f0e8b52ce4caccf897f0668f8b15d0` and Pocket target commit
+`17657ea933cb28dba975fc01025105dcf257ac03`:
+
+```text
+Host seed 0: PASS, +0.119 ns, 9,575 ALMs / 9,660 registers
+Host RBF SHA-256: a35f27dcec68a83ba479f28ecd81f9a8b21c0e8c09c0bcf342ceb5f4a9a4abd5
+Join seed 0: PASS, +0.122 ns, 9,563 ALMs / 9,580 registers
+Join RBF SHA-256: c7f28b0437d74be131017b8eac176cc3d8a00465e1619f395b8b0a9fdff266ac
+```
+
+A second physical diagnostic run remains required before claiming the
+complete transport gate.
