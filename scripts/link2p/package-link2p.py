@@ -68,6 +68,48 @@ def write_json(path: Path, value) -> None:
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def load_result(path: Path) -> dict[str, str]:
+    result = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if "=" in line:
+            key, value = line.split("=", 1)
+            result[key] = value
+    return result
+
+
+def copy_determinism_evidence(source: Path, destination: Path) -> dict:
+    summary_path = source / "result.txt"
+    if not source.is_absolute() or not summary_path.is_file():
+        raise RuntimeError("determinism results must be an absolute passing run directory")
+    summary = load_result(summary_path)
+    if summary.get("result") != "PASS":
+        raise RuntimeError(f"determinism run is not passing: {source}")
+
+    destination.mkdir(parents=True)
+    shutil.copy2(summary_path, destination / "result.txt")
+    patterns = summary.get("patterns", "").split()
+    evidence = {"summary": summary, "patterns": {}}
+    for pattern in patterns:
+        pattern_source = source / pattern
+        result_source = pattern_source / "result.txt"
+        crc_a = pattern_source / "frames" / "a.crc"
+        crc_b = pattern_source / "frames" / "b.crc"
+        if not result_source.is_file() or not crc_a.is_file() or not crc_b.is_file():
+            raise RuntimeError(f"incomplete determinism evidence for {pattern}: {source}")
+        if crc_a.read_bytes() != crc_b.read_bytes():
+            raise RuntimeError(f"mismatching determinism CRC streams for {pattern}: {source}")
+        pattern_destination = destination / pattern
+        pattern_destination.mkdir()
+        shutil.copy2(result_source, pattern_destination / "result.txt")
+        shutil.copy2(crc_a, pattern_destination / "a.crc")
+        shutil.copy2(crc_b, pattern_destination / "b.crc")
+        evidence["patterns"][pattern] = {
+            "frames": len(crc_a.read_text(encoding="utf-8").splitlines()),
+            "crc_stream_sha256": hashes(crc_a)[0],
+        }
+    return evidence
+
+
 def validate_source(build_root: Path, role: str) -> tuple[Path, Path]:
     package = build_root / "core-package"
     reports = build_root / "quartus-reports"
@@ -167,6 +209,7 @@ def main() -> int:
     parser.add_argument("--out", required=True)
     parser.add_argument("--host-build", default=os.environ.get("LINK2P_HOST_BUILD", ""))
     parser.add_argument("--join-build", default=os.environ.get("LINK2P_JOIN_BUILD", ""))
+    parser.add_argument("--determinism-results", default=os.environ.get("LINK2P_DETERMINISM_RESULTS", ""))
     parser.add_argument("--owner", default=os.environ.get("GITHUB_OWNER", "borjaburgos"))
     args = parser.parse_args()
 
@@ -231,7 +274,14 @@ def main() -> int:
             "Run `make link2p-unit` from the source tree; all five ROM-free testbenches must pass.\n",
             encoding="utf-8",
         )
-        (temp_root / "simulation" / "determinism").mkdir()
+        determinism = None
+        if args.determinism_results:
+            determinism = copy_determinism_evidence(
+                Path(args.determinism_results).expanduser(),
+                temp_root / "simulation" / "determinism",
+            )
+        else:
+            (temp_root / "simulation" / "determinism").mkdir()
         (temp_root / "simulation" / "fault-injection").mkdir()
 
         shutil.copy2(repo / "scripts" / "link2p" / "install-link2p.sh", temp_root / "install-link2p.sh")
@@ -262,9 +312,10 @@ def main() -> int:
             "rom_sha256": rom_sha,
             "rom_included": False,
             "dip_configuration": "runtime dipsw[15:0]; peers must match; Bubble Bobble instance write 0x8300",
+            "determinism": determinism,
             "known_limitations": [
                 "Physical two-Pocket transport and gameplay are not yet verified.",
-                "Dual-JTBUBL long-run determinism requires the private ROM.",
+                *( [] if determinism else ["Dual-JTBUBL long-run determinism requires the private ROM."] ),
                 "Join/Join cannot distinguish a missing clock peer from a disconnected cable and remains safely waiting.",
                 "Reconnect requires a fresh automatic session and restarts both local game instances.",
             ],
