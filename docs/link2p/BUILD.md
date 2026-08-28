@@ -44,6 +44,8 @@ make link2p-join
 make link2p-diag-host
 make link2p-diag-join
 make link2p-package ROM=/absolute/path OUT=/absolute/private/path
+make link2p-jtbubl-smoke ROM=/absolute/path/to/bublbobl.rom
+make link2p-jtbubl-long ROM=/absolute/path/to/bublbobl.rom
 ```
 
 `link2p-unit` runs five Icarus testbenches in `jotego/linter`. Host and Join
@@ -51,6 +53,21 @@ build targets pass mutually exclusive compile-time macros and a common
 protocol/build ID to Quartus, try up to four seeds, and preserve the passing
 raw package and reports below `PRIVATE_ARTIFACT_ROOT`. Diagnostic builds keep
 the status grid visible while the complete JTBUBL instance runs behind it.
+
+The ROM-backed determinism targets require the assembled Bubble Bobble Japan
+Ver 0.1 image produced by the current JOTEGO MRA, not the source ZIP. The
+accepted image is 786,692 bytes with MD5
+`fcbcd7500f6a7421e827373cfa8890d3`, CRC-32 `2d09cf0e`, and SHA-256
+`529a46c61e96419cdc307c8bb9116c454eea60ab9a10673ae2be16282be53e80`.
+The runner stages it read-only below `PRIVATE_ARTIFACT_ROOT`, extracts the MCU
+BRAM slice privately, and never writes ROM-derived content into Git.
+
+The smoke target compares two complete JTBUBL instances for 600 scripted
+frames. The long target compares neutral and scripted 10,000-frame sessions,
+with isolated writable state and a second common reset-release timing. A run
+fails on the first video timing, active-pixel, audio-sample, frame-CRC, short
+stream, or frozen-video error. Set `LINK2P_VERILATOR_THREADS` only to tune host
+parallelism; two workers are the verified default.
 
 The package target refuses a non-absolute ROM or output path. It hashes the ROM
 but does not copy it into the generated bundle. Install it later with:

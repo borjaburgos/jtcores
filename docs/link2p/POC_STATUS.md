@@ -212,3 +212,63 @@ generation have passed.
 ### Hardware status
 
 Not started. No one-Pocket transport or two-Pocket gameplay success is claimed.
+
+## 2026-08-28 — canonical ROM and dual-JTBUBL smoke gate
+
+### Repositories
+
+```text
+Superproject branch/commit: codex/jtbubl-link2p-poc / 9e7f22de9
+Pocket branch/commit: codex/jtbubl-link2p-poc / ccb61e54625e5cb1a49a92a830c4bbfe3d631f1e
+```
+
+### Completed work
+
+- Identified `Downloads/bublbobl.zip` as Bubble Bobble Japan Ver 0.1: all 18
+  member names and CRCs match the public JOTEGO MRA metadata.
+- Assembled the ROM only below the private artifact root and matched JOTEGO's
+  canonical assembled MD5 `fcbcd7500f6a7421e827373cfa8890d3`.
+- Added a simulation-only wrapper containing two complete independent JTBUBL
+  instances, synchronous active-video CRC streams, and cycle-level video,
+  timing, and audio equality checks.
+- Added compact neutral and two-player scripted input schedules, the 600-frame
+  smoke target, concurrent isolated 10,000-frame long targets, ROM validation,
+  and ROM-free evidence import for final packaging.
+- Passed the required 600-frame scripted smoke gate with 601 identical paired
+  CRCs and stream SHA-256
+  `1d568192333ac80f75f559c92354ee3dc0d793c9f783af20776b4df6593b8a80`.
+
+### Current failures and unavailable inputs
+
+No ROM inspection, assembly, harness, or smoke-test failure is active. The
+10,000-frame neutral and scripted determinism gate remains to run.
+
+```text
+LOCAL_BUBBLE_BOBBLE_ROM: resolved and verified privately
+POCKET_A_SD_ROOT: not mounted/supplied
+POCKET_B_SD_ROOT: not mounted/supplied
+Pocket firmware/physical IDs/cable model: not yet recorded
+```
+
+### Decisions
+
+- Share only the immutable external ROM data pins between simulated instances;
+  keep every writable game/MCU/video memory and SDRAM controller independent.
+- Use two Verilator workers; a four-worker benchmark produced the same CRC
+  stream but was not faster.
+- Treat fewer than two distinct CRCs in a 600+ frame run as a frozen-video
+  failure, even if A and B match.
+- Keep the early scripted pulses and repeat the control pattern beyond MCU
+  release so the long run covers live two-player controls.
+
+### Next exact command
+
+```bash
+source /home/borjaburgos/Developer/JOTEGO/private/link2p.env
+make link2p-jtbubl-long ROM="$LOCAL_BUBBLE_BOBBLE_ROM"
+```
+
+### Hardware status
+
+Not started. SD cards should remain disconnected until the 10,000-frame gate
+and final private package pass. No physical success is claimed.

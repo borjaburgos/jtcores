@@ -99,7 +99,36 @@ not enable the new target path.
 
 ## Dual-instance determinism
 
-Not yet verified; requires the local Bubble Bobble ROM.
+The canonical assembled Bubble Bobble Japan Ver 0.1 ROM was validated outside
+Git before simulation:
+
+```text
+Size: 786,692 bytes
+CRC-32: 2d09cf0e
+MD5: fcbcd7500f6a7421e827373cfa8890d3
+SHA-256: 529a46c61e96419cdc307c8bb9116c454eea60ab9a10673ae2be16282be53e80
+```
+
+The 600-frame scripted smoke gate passes using two complete JTBUBL instances
+in one Verilator model. Each instance has independent writable CPU, MCU,
+palette, video, object, and work RAM; both read the same immutable ROM image.
+The harness applies identical ROM download, DIP value `ffff`, reset, and P1/P2
+cabinet inputs. It compares video timing and active pixels cycle by cycle,
+audio sample outputs cycle by cycle, and CRC-32 over every completed active
+frame.
+
+```text
+Requested post-download frames: 600
+Recorded paired frames: 601 (includes terminal boundary frame)
+A/B CRC streams: identical
+Distinct frame CRCs: 2
+CRC-stream SHA-256: 1d568192333ac80f75f559c92354ee3dc0d793c9f783af20776b4df6593b8a80
+Result: PASS
+```
+
+The two MCU reset-release messages occurred together at the end of the smoke
+window. The required 10,000-frame neutral and scripted runs are still in
+progress/pending; no long-run or bonus-behavior result is claimed yet.
 
 ## Physical hardware
 
