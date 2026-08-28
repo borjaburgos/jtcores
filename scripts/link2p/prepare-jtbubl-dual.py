@@ -110,6 +110,11 @@ def prepare_test_cpp(source: Path, output: Path) -> None:
     if text.count(old_crc) != 1:
         raise SystemExit("unsupported JTFRAME test.cpp: CRC helper did not match")
     text = text.replace(old_crc, new_crc)
+    old_reset_delay = "reset( simtime < RST_DLY*1000'000L ? 1 : 0);"
+    new_reset_delay = "reset( simtime < _RST_DLY*1000'000L ? 1 : 0);"
+    if text.count(old_reset_delay) != 1:
+        raise SystemExit("unsupported JTFRAME test.cpp: reset-delay expression did not match")
+    text = text.replace(old_reset_delay, new_reset_delay)
     if text.count("    } dump;") != 1:
         raise SystemExit("unsupported JTFRAME test.cpp: video buffers did not match")
     text = text.replace("    } dump;", "    } dump, dump_b;")
