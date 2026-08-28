@@ -411,3 +411,38 @@ make link2p-package ROM="$LOCAL_BUBBLE_BOBBLE_ROM" OUT="$PRIVATE_ARTIFACT_ROOT"
 Not started. The remaining local gates are clean final packaging, checksum
 verification, and two temporary-card installs. No physical transport or
 gameplay success is claimed.
+
+## 2026-08-28 — first physical transport and handheld launch-boundary fix
+
+### Physical result
+
+- Both Pockets run firmware 2.6 with 32 GB SD UUIDs `0403-0201` and
+  `D9C0-15E7`; the 64 GB card remained out of scope.
+- APF metadata length violations in the first diagnostic package were fixed in
+  superproject commit `77cad1ef9`, after which both diagnostic roles loaded
+  normally through openFPGA.
+- The physical Host and Join screens simultaneously showed their distinct
+  role grids and green peer borders. This proves bidirectional physical packet
+  framing and valid packet CRC reception.
+- Both status bands remained cyan instead of turning green. The peers reached
+  the armed/pending launch states but never entered `RUN`; gameplay was not
+  attempted.
+- Private photo evidence is preserved under
+  `<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/hardware/2026-08-28/IMG_9670.jpeg`,
+  SHA-256
+  `2e6d4d18fc1b3360e7936f2869e0a12b92b21fcb3bfeb88eb9ac263475451fcc`.
+
+### Root cause and correction
+
+The target used the Pocket top-level `vblank` input as the launch boundary.
+That input is documented in the target source as Dock-driven and did not pulse
+on either handheld Pocket, leaving Host at `ST_BOUNDARY` and Join at
+`ST_ARMED`. Link2P now uses the blank interval from its always-running local
+diagnostic video timer. The protocol port was renamed from `ext_vblank` to
+`launch_vblank` so the requirement is explicit.
+
+The protocol test now drives independently phased Host and Join launch
+boundaries, including reversed release order during reconnect. All five
+Link2P unit tests and integrated Pocket lint pass. Diagnostic Host/Join Quartus
+rebuilds, package refresh, SD reinstall, and a second physical run are next;
+the complete transport gate and gameplay remain unverified.

@@ -196,4 +196,38 @@ approximately 11 hours 39 minutes; the three patterns ran in parallel.
 
 ## Physical hardware
 
-Not yet verified; requires two Pockets, SD cards, cable, and ROM.
+### First diagnostic bring-up, 2026-08-28
+
+Both physical Pockets run firmware 2.6. The two 32 GB cards are identified by
+UUID `0403-0201` and `D9C0-15E7`; the 64 GB card was excluded. Both cards
+loaded the diagnostic Host and Join packages with the canonical ROM SHA-256
+`529a46c61e96419cdc307c8bb9116c454eea60ab9a10673ae2be16282be53e80`.
+
+The first package attempt exposed APF metadata fields beyond their documented
+length limits. Corrected package commit `77cad1ef9` shortened platform IDs,
+platform names, bitstream names, and bitstream filenames, and made the core
+folder match `metadata.shortname`. Both roles then loaded through openFPGA.
+
+Photo evidence shows the physical Host red/blue role grid and Join green/blue
+role grid simultaneously. Both borders are green, proving that each endpoint
+received a correctly framed peer packet over the physical link cable. Neither
+screen shows a red fault band. The inner status bands remain cyan, however,
+which means both endpoints are armed/pending and have not entered `RUN`.
+
+```text
+Physical serial/framing path: PASS in both directions
+Peer header and packet CRC: PASS in both directions
+Role distinction: PASS
+Session launch: FAIL, stable cyan armed/pending state
+Gameplay: not started
+Evidence SHA-256: 2e6d4d18fc1b3360e7936f2869e0a12b92b21fcb3bfeb88eb9ac263475451fcc
+```
+
+The stall was traced to `jtframe_pocket_top.v` wiring the launch gate to the
+Pocket top-level `vblank` input, which is Dock-driven and remains idle in this
+handheld setup. The correction uses the always-running Link2P diagnostic
+timer's local blanking interval instead. Unit coverage now phases Host and
+Join launch boundaries independently to model two undocked Pockets. The full
+five-test Link2P suite and integrated Pocket lint pass; rebuilt bitstreams and
+a second physical diagnostic run remain required before claiming the complete
+transport gate.
