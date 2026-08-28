@@ -237,6 +237,11 @@ Pocket branch/commit: codex/jtbubl-link2p-poc / ccb61e54625e5cb1a49a92a830c4bbfe
 - Passed the required 600-frame scripted smoke gate with 601 identical paired
   CRCs and stream SHA-256
   `1d568192333ac80f75f559c92354ee3dc0d793c9f783af20776b4df6593b8a80`.
+- Qualified the alternate timing with a 100 ms common post-download reset hold:
+  neutral and scripted sessions each produced 63 identical paired frames with
+  two distinct CRCs and no SDRAM-loader fault.
+- Added atomically refreshed private A/B frame previews and a progress record
+  every 60 paired frames so an executing session can be inspected safely.
 
 ### Current failures and unavailable inputs
 
@@ -260,6 +265,9 @@ Pocket firmware/physical IDs/cable model: not yet recorded
   failure, even if A and B match.
 - Keep the early scripted pulses and repeat the control pattern beyond MCU
   release so the long run covers live two-player controls.
+- Apply alternate reset timing only after ROM transfer; asserting a generic
+  absolute-time reset during the download violates the simulated SDRAM command
+  sequence.
 
 ### Next exact command
 

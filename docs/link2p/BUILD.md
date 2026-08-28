@@ -64,10 +64,19 @@ BRAM slice privately, and never writes ROM-derived content into Git.
 
 The smoke target compares two complete JTBUBL instances for 600 scripted
 frames. The long target compares neutral and scripted 10,000-frame sessions,
-with isolated writable state and a second common reset-release timing. A run
-fails on the first video timing, active-pixel, audio-sample, frame-CRC, short
-stream, or frozen-video error. Set `LINK2P_VERILATOR_THREADS` only to tune host
-parallelism; two workers are the verified default.
+with isolated writable state and a second common reset-release timing. The long
+runner holds both cores in reset for 100 ms starting only after ROM download;
+it does not disturb the SDRAM loader. A run fails on the first video timing,
+active-pixel, audio-sample, frame-CRC, short-stream, or frozen-video error. Set
+`LINK2P_VERILATOR_THREADS` only to tune host parallelism; two workers are the
+verified default.
+
+Each running pattern atomically refreshes private previews at
+`frames/latest-a.ppm` and `frames/latest-b.ppm` on the first recorded frame and
+every 60 frames thereafter. `frames/progress.txt` records the corresponding
+simulator frame, paired-frame count, and CRC. On a host with ImageMagick, open
+or convert a snapshot with `magick latest-a.ppm latest-a.png`. These derived
+screenshots remain under `PRIVATE_ARTIFACT_ROOT` and are not packaged.
 
 The package target refuses a non-absolute ROM or output path. It hashes the ROM
 but does not copy it into the generated bundle. Install it later with:

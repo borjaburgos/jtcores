@@ -130,6 +130,12 @@ The two MCU reset-release messages occurred together at the end of the smoke
 window. The required 10,000-frame neutral and scripted runs are still in
 progress/pending; no long-run or bonus-behavior result is claimed yet.
 
+A short qualification of the alternate timing also passes for both neutral
+and scripted inputs: ROM transfer completes normally, both cores remain in a
+common reset for 100 ms after transfer, and 63 paired frames per pattern are
+identical with two distinct CRCs. This validates the delayed-reset and private
+live-preview plumbing; it is not a substitute for the 10,000-frame gate.
+
 ## Physical hardware
 
 Not yet verified; requires two Pockets, SD cards, cable, and ROM.

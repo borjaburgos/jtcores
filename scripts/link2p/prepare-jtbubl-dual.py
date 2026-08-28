@@ -77,6 +77,13 @@ DUAL_VIDEO_DUMP = r'''void JTSim::video_dump() {
                             frame_cnt, crc_a, crc_b);
                         throw runtime_error("dual JTBUBL frame CRC mismatch");
                     }
+                    static int recorded_frames = 0;
+                    recorded_frames++;
+                    if( recorded_frames==1 || recorded_frames%60==0 ) {
+                        storePreview("frames/latest-a.ppm", dump.prev_buffer(), activew, activeh);
+                        storePreview("frames/latest-b.ppm", dump_b.prev_buffer(), activew, activeh);
+                        storeProgress(frame_cnt, recorded_frames, crc_a);
+                    }
                 }
             }
             LVBLl = game.LVBL;
@@ -106,15 +113,73 @@ def prepare_test_cpp(source: Path, output: Path) -> None:
     if( !of.is_open() ) throw runtime_error(string("cannot write ") + filename);
     of << hex << crc32 << endl;
     return crc32;
+}
+
+void storePreview( const char *filename, char *data, int width, int height ) {
+    string temporary = string(filename) + ".tmp";
+    ofstream of(temporary, ios_base::binary | ios_base::trunc);
+    if( !of.is_open() ) throw runtime_error(string("cannot write ") + temporary);
+    of << "P6\\n" << width << " " << height << "\\n255\\n";
+    const uint32_t *pixels = reinterpret_cast<const uint32_t *>(data);
+    for( int k=0; k<width*height; k++ ) {
+        const uint32_t pixel = pixels[k];
+        const char rgb[3] = {
+            static_cast<char>( pixel        & 0xff),
+            static_cast<char>((pixel >>  8) & 0xff),
+            static_cast<char>((pixel >> 16) & 0xff)
+        };
+        of.write(rgb, sizeof(rgb));
+    }
+    of.close();
+    if( !of ) throw runtime_error(string("cannot finish ") + temporary);
+    if( rename(temporary.c_str(), filename) != 0 ) {
+        throw runtime_error(string("cannot publish ") + filename);
+    }
+}
+
+void storeProgress( int simulator_frame, int recorded_frames, uint32_t crc32 ) {
+    const char *temporary = "frames/progress.txt.tmp";
+    ofstream of(temporary, ios_base::trunc);
+    if( !of.is_open() ) throw runtime_error(string("cannot write ") + temporary);
+    of << "simulator_frame=" << dec << simulator_frame << "\\n"
+       << "recorded_frames=" << recorded_frames << "\\n"
+       << "latest_crc32=" << hex << crc32 << "\\n";
+    of.close();
+    if( !of ) throw runtime_error(string("cannot finish ") + temporary);
+    if( rename(temporary, "frames/progress.txt") != 0 ) {
+        throw runtime_error("cannot publish frames/progress.txt");
+    }
 }'''
     if text.count(old_crc) != 1:
         raise SystemExit("unsupported JTFRAME test.cpp: CRC helper did not match")
     text = text.replace(old_crc, new_crc)
-    old_reset_delay = "reset( simtime < RST_DLY*1000'000L ? 1 : 0);"
-    new_reset_delay = "reset( simtime < _RST_DLY*1000'000L ? 1 : 0);"
-    if text.count(old_reset_delay) != 1:
-        raise SystemExit("unsupported JTFRAME test.cpp: reset-delay expression did not match")
-    text = text.replace(old_reset_delay, new_reset_delay)
+    class_anchor = "    bool download = false;\n"
+    class_replacement = class_anchor + '''#ifdef _LINK2P_RESET_HOLD_MS
+    vluint64_t link2p_reset_release_time = 0;
+#endif
+'''
+    if text.count(class_anchor) != 1:
+        raise SystemExit("unsupported JTFRAME test.cpp: download state did not match")
+    text = text.replace(class_anchor, class_replacement)
+    release_anchor = "            reset(0);\n        }\n#ifdef _RST_DLY"
+    release_replacement = '''#ifdef _LINK2P_RESET_HOLD_MS
+            link2p_reset_release_time = simtime + _LINK2P_RESET_HOLD_MS*1000'000L;
+            reset(1);
+#else
+            reset(0);
+#endif
+        }
+#ifdef _LINK2P_RESET_HOLD_MS
+        if( link2p_reset_release_time!=0 && simtime>=link2p_reset_release_time ) {
+            fprintf(stderr, "\\nLink2P post-download reset released (frame %d)\\n", frame_cnt);
+            reset(0);
+            link2p_reset_release_time = 0;
+        }
+#endif
+#ifdef _RST_DLY'''
+    if text.count(release_anchor) != 1:
+        raise SystemExit("unsupported JTFRAME test.cpp: download reset release did not match")
+    text = text.replace(release_anchor, release_replacement)
     if text.count("    } dump;") != 1:
         raise SystemExit("unsupported JTFRAME test.cpp: video buffers did not match")
     text = text.replace("    } dump;", "    } dump, dump_b;")

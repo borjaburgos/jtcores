@@ -57,7 +57,7 @@ case ${mode} in
         patterns=(neutral scripted)
         # A second common reset-release timing, after the ROM download, tests
         # that determinism is not an artifact of the default release instant.
-        reset_delay=350
+        reset_delay=100
         ;;
 esac
 [[ ${frames} =~ ^[1-9][0-9]*$ ]] || {
@@ -99,7 +99,7 @@ if [[ -n ${reset_delay} ]]; then
 fi
 jtsim_args=(-verilator -load -dipsw ffff -video "${simulation_frames}" -fast -batch)
 if [[ -n ${reset_delay} ]]; then
-    jtsim_args+=(-d "RST_DLY=${reset_delay}")
+    jtsim_args+=(-d "LINK2P_RESET_HOLD_MS=${reset_delay}")
 fi
 
 printf 'ROM accepted: size=%s crc32=%s sha256=%s md5=%s\n' \
@@ -209,7 +209,7 @@ done
     printf 'requested_frames=%s\n' "${frames}"
     printf 'simulator_frame_limit=%s\n' "${simulation_frames}"
     printf 'patterns=%s\n' "${patterns[*]}"
-    printf 'reset_delay_ms=%s\n' "${reset_delay:-default-after-download}"
+    printf 'post_download_reset_hold_ms=%s\n' "${reset_delay:-0}"
     printf 'verilator_threads=%s\n' "${verilator_threads}"
     printf 'rom_size=%s\n' "${rom_size}"
     printf 'rom_crc32=%s\n' "${rom_crc32}"
