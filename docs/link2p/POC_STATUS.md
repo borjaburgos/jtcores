@@ -231,9 +231,9 @@ Pocket branch/commit: codex/jtbubl-link2p-poc / ccb61e54625e5cb1a49a92a830c4bbfe
 - Added a simulation-only wrapper containing two complete independent JTBUBL
   instances, synchronous active-video CRC streams, and cycle-level video,
   timing, and audio equality checks.
-- Added compact neutral and two-player scripted input schedules, the 600-frame
-  smoke target, concurrent isolated 10,000-frame long targets, ROM validation,
-  and ROM-free evidence import for final packaging.
+- Added compact neutral and two independent two-player scripted schedules, the
+  600-frame smoke target, concurrent isolated 10,000-frame long targets, ROM
+  validation, and ROM-free evidence import for final packaging.
 - Passed the required 600-frame scripted smoke gate with 601 identical paired
   CRCs and stream SHA-256
   `1d568192333ac80f75f559c92354ee3dc0d793c9f783af20776b4df6593b8a80`.
@@ -242,6 +242,9 @@ Pocket branch/commit: codex/jtbubl-link2p-poc / ccb61e54625e5cb1a49a92a830c4bbfe
   two distinct CRCs and no SDRAM-loader fault.
 - Added atomically refreshed private A/B frame previews and a progress record
   every 60 paired frames so an executing session can be inspected safely.
+- Hardened final evidence import so a short qualification, wrong ROM, missing
+  input pattern, default reset timing, malformed/mismatched CRC stream, or
+  frozen output cannot satisfy the 10,000-frame packaging gate.
 
 ### Current failures and unavailable inputs
 
@@ -264,9 +267,9 @@ Pocket firmware/physical IDs/cable model: not yet recorded
 - Treat fewer than two distinct CRCs in a 600+ frame run as a frozen-video
   failure, even if A and B match.
 - Repeat the scripted pulses beyond MCU release so the long run covers live
-  two-player controls. The final schedule waits 720 frames, then repeats P1/P2
-  Coin, P2/P1 Start, movement, and actions every 240 frames; private previews
-  must visibly confirm gameplay entry.
+  two-player controls. Both final seeds wait 720 frames, then repeat P1/P2 Coin,
+  both Start buttons, movement, and actions every 240 frames with different
+  phases; private previews must visibly confirm gameplay entry.
 - Apply alternate reset timing only after ROM transfer; asserting a generic
   absolute-time reset during the download violates the simulated SDRAM command
   sequence.

@@ -77,7 +77,33 @@ def load_result(path: Path) -> dict[str, str]:
     return result
 
 
-def copy_determinism_evidence(source: Path, destination: Path) -> dict:
+def result_integer(result: dict[str, str], key: str, source: Path) -> int:
+    try:
+        return int(result[key])
+    except (KeyError, ValueError) as exc:
+        raise RuntimeError(f"invalid determinism {key} in {source}") from exc
+
+
+def load_crc_stream(path: Path) -> list[str]:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or any(not 1 <= len(line) <= 8 for line in lines):
+        raise RuntimeError(f"invalid determinism CRC stream: {path}")
+    try:
+        for line in lines:
+            int(line, 16)
+    except ValueError as exc:
+        raise RuntimeError(f"invalid determinism CRC stream: {path}") from exc
+    return lines
+
+
+def copy_determinism_evidence(
+    source: Path,
+    destination: Path,
+    *,
+    rom_size: int,
+    rom_crc32: str,
+    rom_sha256: str,
+) -> dict:
     summary_path = source / "result.txt"
     if not source.is_absolute() or not summary_path.is_file():
         raise RuntimeError("determinism results must be an absolute passing run directory")
@@ -85,9 +111,27 @@ def copy_determinism_evidence(source: Path, destination: Path) -> dict:
     if summary.get("result") != "PASS":
         raise RuntimeError(f"determinism run is not passing: {source}")
 
+    requested_frames = result_integer(summary, "requested_frames", source)
+    reset_hold_ms = result_integer(summary, "post_download_reset_hold_ms", source)
+    patterns = summary.get("patterns", "").split()
+    if summary.get("mode") != "long" or requested_frames < 10_000:
+        raise RuntimeError(f"determinism evidence is not a 10,000-frame long run: {source}")
+    if patterns != ["neutral", "scripted", "scripted_alt"]:
+        raise RuntimeError(
+            f"determinism evidence must contain neutral and both scripted seeds: {source}"
+        )
+    if reset_hold_ms <= 0:
+        raise RuntimeError(f"determinism evidence is missing the alternate reset timing: {source}")
+    expected_rom = {
+        "rom_size": str(rom_size),
+        "rom_crc32": rom_crc32,
+        "rom_sha256": rom_sha256,
+    }
+    if any(summary.get(key) != value for key, value in expected_rom.items()):
+        raise RuntimeError(f"determinism evidence ROM does not match the packaged ROM: {source}")
+
     destination.mkdir(parents=True)
     shutil.copy2(summary_path, destination / "result.txt")
-    patterns = summary.get("patterns", "").split()
     evidence = {"summary": summary, "patterns": {}}
     for pattern in patterns:
         pattern_source = source / pattern
@@ -98,13 +142,23 @@ def copy_determinism_evidence(source: Path, destination: Path) -> dict:
             raise RuntimeError(f"incomplete determinism evidence for {pattern}: {source}")
         if crc_a.read_bytes() != crc_b.read_bytes():
             raise RuntimeError(f"mismatching determinism CRC streams for {pattern}: {source}")
+        crc_lines = load_crc_stream(crc_a)
+        if len(crc_lines) < requested_frames:
+            raise RuntimeError(
+                f"short determinism CRC stream for {pattern}: "
+                f"{len(crc_lines)} < {requested_frames}"
+            )
+        if len(set(crc_lines)) < 2:
+            raise RuntimeError(f"frozen determinism CRC stream for {pattern}: {source}")
+        if not result_source.read_text(encoding="utf-8").rstrip().endswith("PASS"):
+            raise RuntimeError(f"pattern result is not passing for {pattern}: {source}")
         pattern_destination = destination / pattern
         pattern_destination.mkdir()
         shutil.copy2(result_source, pattern_destination / "result.txt")
         shutil.copy2(crc_a, pattern_destination / "a.crc")
         shutil.copy2(crc_b, pattern_destination / "b.crc")
         evidence["patterns"][pattern] = {
-            "frames": len(crc_a.read_text(encoding="utf-8").splitlines()),
+            "frames": len(crc_lines),
             "crc_stream_sha256": hashes(crc_a)[0],
         }
     return evidence
@@ -279,6 +333,9 @@ def main() -> int:
             determinism = copy_determinism_evidence(
                 Path(args.determinism_results).expanduser(),
                 temp_root / "simulation" / "determinism",
+                rom_size=rom_size,
+                rom_crc32=rom_crc,
+                rom_sha256=rom_sha,
             )
         else:
             (temp_root / "simulation" / "determinism").mkdir()

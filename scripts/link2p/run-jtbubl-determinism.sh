@@ -54,7 +54,7 @@ case ${mode} in
         ;;
     long)
         frames=${LINK2P_LONG_FRAMES:-10000}
-        patterns=(neutral scripted)
+        patterns=(neutral scripted scripted_alt)
         # A second common reset-release timing, after the ROM download, tests
         # that determinism is not an artifact of the default release instant.
         reset_delay=100
@@ -153,9 +153,26 @@ for pattern in "${patterns[@]}"; do
 done
 
 run_pids=()
+run_containers=()
+run_token=$(basename "${run_root}" | tr '[:upper:]' '[:lower:]')
+cleanup_run_children() {
+    local container pid
+    for container in "${run_containers[@]}"; do
+        docker stop --timeout 5 "${container}" >/dev/null 2>&1 || true
+    done
+    for pid in "${run_pids[@]}"; do
+        kill "${pid}" >/dev/null 2>&1 || true
+    done
+    wait >/dev/null 2>&1 || true
+}
+trap 'cleanup_run_children; exit 130' INT TERM
+trap cleanup_run_children EXIT
 for pattern in "${patterns[@]}"; do
     printf 'Starting %s input pattern...\n' "${pattern}"
+    container_name=link2p-${run_token}-${pattern}
+    run_containers+=("${container_name}")
     docker run --rm \
+        --name "${container_name}" \
         -v "${repo}:/jtcores:ro" \
         -v "${run_root}:${container_work}" \
         -w "${container_work}/${pattern}" \
@@ -178,6 +195,7 @@ for index in "${!run_pids[@]}"; do
     fi
 done
 (( run_failed == 0 )) || exit 1
+trap - INT TERM EXIT
 
 for pattern in "${patterns[@]}"; do
     crc_a=${run_root}/${pattern}/frames/a.crc

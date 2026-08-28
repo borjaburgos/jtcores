@@ -1,0 +1,25 @@
+# Alternate deterministic two-player seed. It uses the same post-boot credit
+# cadence as scripted.cab, reverses Start order, and changes both players'
+# movement/action phases. The 240-frame loop expands the schedule past 10,000.
+720
+loop
+2 coin
+6
+2 2coin
+6
+2 coin
+6
+2 2coin
+20
+2 1p
+30
+2 2p
+60
+20 right b1 2right 2b1
+5 right b1 b2 2right 2b1 2b2
+20 left b2 2left 2b2
+5 left b1 b2 2left 2b1 2b2
+15 up right b1 2up 2left 2b2
+15 down left b2 2down 2right 2b1
+20 b1 b2 2b1 2b2
+repeat 40
