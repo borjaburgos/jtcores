@@ -135,6 +135,11 @@ and scripted inputs: ROM transfer completes normally, both cores remain in a
 common reset for 100 ms after transfer, and 63 paired frames per pattern are
 identical with two distinct CRCs. This validates the delayed-reset and private
 live-preview plumbing; it is not a substitute for the 10,000-frame gate.
+The final long-run cabinet schedule waits 720 post-reset frames, then repeats
+P1 Select/coin, P2 coin, P2 Start, P1 Start, and two-player movement/action
+pulses every 240 frames so the run exercises live gameplay rather than only
+the boot or attract sequence. Gameplay entry must also be confirmed from the
+private frame previews before the physical gate is opened.
 
 ## Physical hardware
 

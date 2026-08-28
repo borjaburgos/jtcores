@@ -263,8 +263,10 @@ Pocket firmware/physical IDs/cable model: not yet recorded
   stream but was not faster.
 - Treat fewer than two distinct CRCs in a 600+ frame run as a frozen-video
   failure, even if A and B match.
-- Keep the early scripted pulses and repeat the control pattern beyond MCU
-  release so the long run covers live two-player controls.
+- Repeat the scripted pulses beyond MCU release so the long run covers live
+  two-player controls. The final schedule waits 720 frames, then repeats P1/P2
+  Coin, P2/P1 Start, movement, and actions every 240 frames; private previews
+  must visibly confirm gameplay entry.
 - Apply alternate reset timing only after ROM transfer; asserting a generic
   absolute-time reset during the download violates the simulated SDRAM command
   sequence.
