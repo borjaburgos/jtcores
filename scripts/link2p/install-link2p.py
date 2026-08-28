@@ -15,14 +15,21 @@ from datetime import datetime, timezone
 
 
 ROLE_DATA = {
-    ("normal", "host"): ("JTBUBLLinkHost", "jtbubl_link2p_host"),
-    ("normal", "join"): ("JTBUBLLinkJoin", "jtbubl_link2p_join"),
+    ("normal", "host"): ("JTBUBLLinkHost", "bubl_l2p_host"),
+    ("normal", "join"): ("JTBUBLLinkJoin", "bubl_l2p_join"),
     ("diagnostic", "host"): (
-        "JTBUBLLinkDiagHost", "jtbubl_link2p_diag_host"
+        "JTBUBLLinkDiagHost", "bubl_diag_host"
     ),
     ("diagnostic", "join"): (
-        "JTBUBLLinkDiagJoin", "jtbubl_link2p_diag_join"
+        "JTBUBLLinkDiagJoin", "bubl_diag_join"
     ),
+}
+
+LEGACY_PLATFORM_IDS = {
+    ("normal", "host"): "jtbubl_link2p_host",
+    ("normal", "join"): "jtbubl_link2p_join",
+    ("diagnostic", "host"): "jtbubl_link2p_diag_host",
+    ("diagnostic", "join"): "jtbubl_link2p_diag_join",
 }
 
 
@@ -82,6 +89,25 @@ def package_files(package_root: Path):
             raise RuntimeError(f"package contains a symlink: {source}")
         if source.is_file():
             yield source, source.relative_to(package_root)
+
+
+def retire_legacy_platform(
+    platform_id: str, sd_root: Path, backup_root: Path, dry_run: bool
+) -> None:
+    relative_paths = (
+        Path("Assets") / platform_id,
+        Path("Platforms") / f"{platform_id}.json",
+        Path("Platforms") / "_images" / f"{platform_id}.bin",
+    )
+    for relative in relative_paths:
+        source = sd_root / relative
+        if not source.exists():
+            continue
+        destination = backup_root / "retired-platforms" / relative
+        print(f"RETIRE {relative} -> {destination.relative_to(sd_root)}")
+        if not dry_run:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(source, destination)
 
 
 def main() -> int:
@@ -178,6 +204,13 @@ def main() -> int:
                 temp.write(hash_text)
                 temp_path = Path(temp.name)
             os.replace(temp_path, hash_destination)
+
+        retire_legacy_platform(
+            LEGACY_PLATFORM_IDS[(args.mode, role)],
+            sd_root,
+            backup_root,
+            args.dry_run,
+        )
 
     print("Install plan complete" if args.dry_run else "Install complete")
     return 0

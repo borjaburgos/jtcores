@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -19,31 +20,52 @@ import tempfile
 ROLE_CONFIG = {
     ("normal", "host"): {
         "core_suffix": "JTBUBLLinkHost",
-        "platform": "jtbubl_link2p_host",
-        "display": "Bubble Bobble Link2P — Host/P1",
-        "rbf": "jtbubl_link2p_host.rbf_r",
+        "platform": "bubl_l2p_host",
+        "display": "Bubble Bobble Link2P Host/P1",
+        "rbf": "l2p_h.rbf_r",
+        "bitstream_name": "Link2P Host",
     },
     ("normal", "join"): {
         "core_suffix": "JTBUBLLinkJoin",
-        "platform": "jtbubl_link2p_join",
-        "display": "Bubble Bobble Link2P — Join/P2",
-        "rbf": "jtbubl_link2p_join.rbf_r",
+        "platform": "bubl_l2p_join",
+        "display": "Bubble Bobble Link2P Join/P2",
+        "rbf": "l2p_j.rbf_r",
+        "bitstream_name": "Link2P Join",
     },
     ("diagnostic", "host"): {
         "core_suffix": "JTBUBLLinkDiagHost",
-        "platform": "jtbubl_link2p_diag_host",
-        "display": "Bubble Bobble Link2P Diagnostics — Host/P1",
-        "rbf": "jtbubl_link2p_diag_host.rbf_r",
+        "platform": "bubl_diag_host",
+        "display": "Bubble Bobble L2P Diag Host/P1",
+        "rbf": "l2pd_h.rbf_r",
+        "bitstream_name": "Link2P Diag H",
     },
     ("diagnostic", "join"): {
         "core_suffix": "JTBUBLLinkDiagJoin",
-        "platform": "jtbubl_link2p_diag_join",
-        "display": "Bubble Bobble Link2P Diagnostics — Join/P2",
-        "rbf": "jtbubl_link2p_diag_join.rbf_r",
+        "platform": "bubl_diag_join",
+        "display": "Bubble Bobble L2P Diag Join/P2",
+        "rbf": "l2pd_j.rbf_r",
+        "bitstream_name": "Link2P Diag J",
     },
 }
 
 FORBIDDEN_SUFFIXES = {".rom", ".zip", ".7z", ".sof", ".rbf"}
+
+
+def validate_role_config(owner: str) -> None:
+    if not owner or len(owner) > 31:
+        raise RuntimeError("Pocket core author must contain 1-31 characters")
+    for (mode, role), config in ROLE_CONFIG.items():
+        platform = config["platform"]
+        if len(platform) > 15 or re.fullmatch(r"[a-z0-9][a-z0-9_]*", platform) is None:
+            raise RuntimeError(f"invalid Pocket platform ID for {mode}/{role}: {platform}")
+        if len(config["display"]) > 31:
+            raise RuntimeError(f"Pocket platform name is too long for {mode}/{role}")
+        if len(config["core_suffix"]) > 31:
+            raise RuntimeError(f"Pocket core shortname is too long for {mode}/{role}")
+        if len(config["bitstream_name"]) > 15:
+            raise RuntimeError(f"Pocket bitstream name is too long for {mode}/{role}")
+        if len(config["rbf"]) > 15:
+            raise RuntimeError(f"Pocket bitstream filename is too long for {mode}/{role}")
 
 
 def run_git(repo: Path, *args: str, fallback: str = "unknown") -> str:
@@ -239,7 +261,7 @@ def create_role_package(
     core_json = load_json(core_json_path)
     metadata = core_json["core"]["metadata"]
     metadata["platform_ids"] = [platform]
-    metadata["shortname"] = f"bubl-link-{role}" if mode == "normal" else f"bubl-diag-{role}"
+    metadata["shortname"] = config["core_suffix"]
     metadata["description"] = config["display"]
     metadata["author"] = owner
     metadata["url"] = f"https://github.com/{owner}/jtcores"
@@ -247,7 +269,7 @@ def create_role_package(
     metadata["date_release"] = release_date
     core_json["core"]["framework"]["hardware"]["link_port"] = True
     core_json["core"]["cores"] = [{
-        "name": f"JTBUBL Link2P {role.title()}" + (" Diagnostics" if mode == "diagnostic" else ""),
+        "name": config["bitstream_name"],
         "id": 0,
         "filename": config["rbf"],
     }]
@@ -309,6 +331,7 @@ def main() -> int:
     parser.add_argument("--determinism-results", default=os.environ.get("LINK2P_DETERMINISM_RESULTS", ""))
     parser.add_argument("--owner", default=os.environ.get("GITHUB_OWNER", "borjaburgos"))
     args = parser.parse_args()
+    validate_role_config(args.owner)
 
     repo = Path(__file__).resolve().parents[2]
     pocket_repo = repo / "modules" / "jtframe" / "target" / "pocket"
