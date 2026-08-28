@@ -50,25 +50,27 @@ Status: passing in Icarus Verilog 13.0 through `make link2p-unit`.
 Integrated JTBUBL lint passes with only the existing Analogizer missing-pin
 warnings.
 
-## Link2P synthesis checkpoint
+## Final ROM-free Link2P synthesis
 
 Status: Host and Join verified through full Quartus analysis, synthesis,
-fitting, assembly, and timing before the coordinated source commits. A final
-post-commit rebuild is required for package hashes because JTFRAME embeds the
-superproject commit ID.
+fitting, assembly, and timing from the coordinated, clean source commits.
 
 ```text
+JTCORES commit: 162c6fc41dc5d54ce2174b66153cc80c3b99e3ef
+Pocket target commit: ccb61e54625e5cb1a49a92a830c4bbfe3d631f1e
+JTCORES upstream master at verification: 47e6b8dad5b52b6f314813fe3d78807dcce77757
+Pocket upstream master at verification: 2050ac4d09d126ab1af5ad7eba48ef4426804a3f
 Quartus: Prime Lite 20.1.1 Build 720
 Device: 5CEBA4F23C8
 
-Host seed 0: PASS, +0.122 ns worst slack
-Host logic/registers: 9,611 ALMs (52%) / 9,664 registers
-Host RBF SHA-256 checkpoint: 674da07bca95980f41566793aef827be69a35bd5fec481070fae7af45a5279e6
+Host seed 0: PASS, +0.119 ns worst slack
+Host logic/registers: 9,596 ALMs (52%) / 9,726 registers
+Host RBF SHA-256: e094638f014d0afce836520d70d850cb5fee3b09c25d5106ae2334181a8fec9f
 Host pins: SI input, SCK output, SO output
 
-Join seed 0: PASS, +0.122 ns worst slack
-Join logic/registers: 9,591 ALMs (52%) / 9,668 registers
-Join RBF SHA-256 checkpoint: 8e405ce628b8852062ff453d6179199557414e4b4699111643009b15b1487d45
+Join seed 0: PASS, +0.119 ns worst slack
+Join logic/registers: 9,586 ALMs (52%) / 9,682 registers
+Join RBF SHA-256: 6382241d35112bf5be01bf21bb4cdc8e5056378ed07b5213a2e93a87fb962b2d
 Join pins: SI input, SCK input, SO output
 ```
 
@@ -77,6 +79,14 @@ four PLLs. The narrowly scoped cable CDC exceptions match the physical link
 ports and first synchronizer stages; SCK/SI/SO do not appear in Quartus's
 unconstrained-port list. No Link2P latch, gated-clock, CDC-attribute, or unused
 signal warning remains.
+
+The release-candidate role packages and complete Quartus reports are preserved
+outside Git at:
+
+```text
+<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/work/normal/host/
+<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/work/normal/join/
+```
 
 ## Stock post-change regression
 

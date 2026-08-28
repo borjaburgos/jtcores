@@ -158,3 +158,57 @@ make link2p-join
 
 These final builds will be tied to the coordinated superproject commit, then
 the next required user input is the absolute Bubble Bobble ROM path.
+
+## 2026-08-27 — commit-pinned release-candidate builds
+
+### Repositories and GitHub access
+
+```text
+Superproject branch/commit: codex/jtbubl-link2p-poc / 162c6fc41dc5d54ce2174b66153cc80c3b99e3ef
+Pocket branch/commit: codex/jtbubl-link2p-poc / ccb61e54625e5cb1a49a92a830c4bbfe3d631f1e
+JTCORES upstream master: 47e6b8dad5b52b6f314813fe3d78807dcce77757
+Pocket upstream master: 2050ac4d09d126ab1af5ad7eba48ef4426804a3f
+```
+
+GitHub CLI authentication was reverified as `borjaburgos`: both forks are
+admin-accessible, `jotego/jtcores` is readable, and `jotego/pocket` is
+writable. The JTCORES fork is public while the Pocket fork and upstream Pocket
+repository are private, so no public superproject PR will be opened while it
+would expose an inaccessible submodule commit.
+
+### Final ROM-free build results
+
+```text
+make link2p-host  PASS seed 0, +0.119 ns, 9,596 ALMs / 9,726 registers
+Host RBF SHA-256  e094638f014d0afce836520d70d850cb5fee3b09c25d5106ae2334181a8fec9f
+
+make link2p-join  PASS seed 0, +0.119 ns, 9,586 ALMs / 9,682 registers
+Join RBF SHA-256  6382241d35112bf5be01bf21bb4cdc8e5056378ed07b5213a2e93a87fb962b2d
+```
+
+Both preserved manifests identify the exact superproject and Pocket commits.
+Both use 348,587 memory bits, 70 RAM blocks, 26 DSP blocks, and four PLLs.
+Quartus confirms Host drives SCK, Join leaves SCK output disabled, and SI/SO
+have the intended directions. Link2P cable pins are covered by the scoped SDC
+exceptions rather than appearing in the unconstrained-port lists.
+
+### Current gate and next exact command
+
+The ROM-free implementation, tests, role builds, package transformation, and
+safe installer are complete. The first remaining gate is ROM-backed dual-core
+determinism. It requires an existing absolute path to the user's legally
+obtained Bubble Bobble ROM:
+
+```bash
+source <PRIVATE_ARTIFACT_ROOT>/link2p.env
+make link2p-jtbubl-smoke ROM=/absolute/path/to/bubble-bobble.rom
+```
+
+`LOCAL_BUBBLE_BOBBLE_ROM`, `POCKET_A_SD_ROOT`, and `POCKET_B_SD_ROOT` remain
+unset. The ROM is needed now. The SD cards should remain disconnected until
+ROM inspection, deterministic dual-instance testing, and final private package
+generation have passed.
+
+### Hardware status
+
+Not started. No one-Pocket transport or two-Pocket gameplay success is claimed.
