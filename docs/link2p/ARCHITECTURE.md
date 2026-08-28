@@ -70,6 +70,11 @@ Game `LVBL` is used after release to number logical frames and latch frame-assoc
 - Two-frame input pipeline. Inputs sampled during logical frame N target N+2.
 - A required missing, stale, corrupt, or incompatible sample terminates the session and reasserts the existing reset request.
 - Active-video CRC-32 is exchanged as a diagnostic. A mismatch stops both sessions; CRC data is not used to repair state.
+- Faulted peers enter a quiet recovery handshake, generate a new Host session
+  ID, and restart both complete local game instances through the same reset path.
+- A target-only status grid is visible while reset is held. A diagnostic build
+  can keep it visible for cable bring-up; normal builds switch to complete local
+  JTBUBL video once the session starts.
 - Stock builds compile the new logic out and retain the existing high-impedance link-port behavior.
 
 ## Clock-domain approach
@@ -91,4 +96,8 @@ The install helper accepts an external assembled `.rom`, verifies its hash, and 
 
 ## Deferred validation
 
-ROM CRC cannot be embedded until the user's local ROM is supplied. The first POC therefore enforces ROM identity in the install manifest/helper and records hashes for both cards. Hardware transport, startup alignment, long-run MCU behavior, and cable-removal behavior require two physical Pockets.
+ROM CRC cannot be embedded until the user's local ROM is supplied. The first
+POC therefore verifies and records ROM identity in the install manifest/helper;
+the on-wire handshake currently checks build, game, and DIP identity. Hardware
+transport, startup alignment, long-run MCU behavior, and cable-removal behavior
+require two physical Pockets.

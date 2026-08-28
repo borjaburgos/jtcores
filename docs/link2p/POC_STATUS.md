@@ -74,4 +74,87 @@ Not started. No SD card, ROM, Pocket, or cable result has been claimed.
 make link2p-unit
 ```
 
-This target will be added with the ROM-free transport RTL and testbench.
+## 2026-08-27 — ROM-free transport, integration, and synthesis
+
+### Repositories
+
+```text
+Superproject branch/commit: codex/jtbubl-link2p-poc / b5d437f2d8c7f65079ca69b0eb414ea228ce022c
+Pocket branch/commit: codex/jtbubl-link2p-poc / ccb61e5 (three coordinated commits)
+Pocket upstream: 2050ac4d09d126ab1af5ad7eba48ef4426804a3f
+```
+
+### Completed work
+
+- Added the synthesizable 192-bit Host/Join serial endpoint with registered
+  CRC-8, gap framing, and explicit Pocket CDC synchronizers.
+- Added build/game/DIP/session handshake, VBL-aligned reset release, a
+  four-entry frame-keyed buffer, and symmetric N+2 active-low controls.
+- Added safe missing-input, CRC, identity, peer, timeout, buffer, and video-CRC
+  faults plus quiet fresh-session recovery.
+- Added preserved diagnostic signals, active-video CRC-32, and a target status
+  grid that remains visible while linked reset is held.
+- Added five ROM-free Icarus testbenches and stable Make entry points.
+- Added safe role build preservation, ROM-free package transformation, and an
+  SD installer with absolute-path validation, dry-run, hashing, backup, and no
+  deletion behavior.
+- Committed the Pocket work as `c4ab956`, `6b3ba46`, and `ccb61e5`.
+
+### Commands and passing tests
+
+```text
+make link2p-unit                         PASS (five testbenches)
+make link2p-lint                         PASS (pre-existing Analogizer warnings)
+make link2p-host                         PASS seed 0, +0.122 ns checkpoint
+make link2p-join                         PASS seed 0, +0.122 ns checkpoint
+stock xjtcore.sh bubl pocket             PASS seed 0, +0.109 ns
+package-link2p.py with dummy ROM         PASS; no ROM copied
+install-link2p.sh --dry-run --role both  PASS; unique stock-safe paths
+sha256sum -c SHA256SUMS                  PASS
+```
+
+### Current failures and unavailable inputs
+
+No ROM-free test, lint, synthesis, timing, package-layout, or installer dry-run
+failure is active.
+
+```text
+LOCAL_BUBBLE_BOBBLE_ROM: not supplied
+POCKET_A_SD_ROOT: not mounted/supplied
+POCKET_B_SD_ROOT: not mounted/supplied
+Pocket firmware/physical IDs/cable model: not yet recorded
+```
+
+ROM-backed dual-JTBUBL determinism and playable asset installation are blocked
+only on the local ROM. Physical transport/gameplay remains blocked on two SD
+mounts and the two Pockets.
+
+### Decisions
+
+- A fixed four-slot ring implements the two-frame delay and detects overwrite;
+  there is no separate asynchronous FIFO.
+- Corrupt packets are rejected and lead to timeout if a required valid packet
+  does not arrive. Duplicate/stale packets are flagged and cannot update input.
+- Join/Join remains safely waiting because neither endpoint supplies SCK.
+- Normal Link2P builds show the status grid only while reset/fault is held;
+  diagnostic builds keep it selected for cable bring-up.
+- Stock no-Link2P elaboration uses the literal original signal connections and
+  keeps every link output disabled. Its RBF hash changes with the embedded Git
+  commit and is not expected to equal the base-commit hash.
+
+### Hardware status
+
+Not started. No one-Pocket or two-Pocket success is claimed.
+
+### Next exact command
+
+After the superproject records the Pocket submodule commit:
+
+```bash
+source <PRIVATE_ARTIFACT_ROOT>/link2p.env
+make link2p-host
+make link2p-join
+```
+
+These final builds will be tied to the coordinated superproject commit, then
+the next required user input is the absolute Bubble Bobble ROM path.

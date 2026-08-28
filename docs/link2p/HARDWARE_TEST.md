@@ -14,9 +14,16 @@ Record Pocket firmware, a physical Pocket identifier, SD identifier, cable type,
 
 Do not begin linked JTBUBL gameplay until the ROM-free transport diagnostic passes in both directions on hardware. Verify counters, local button bitmaps, CRC error count, timeout behavior, and a clean fresh session after disconnect/reconnect.
 
+Build `link2p-diag-host` and `link2p-diag-join` for this gate. The screen uses
+a green border after a framed peer is observed, a role-colored checkerboard,
+a state/fault band, and bit rows for session, logical frame, TX/RX sequence,
+local controls, CRC errors, and timeouts. Both diagnostic packages still contain
+a complete local JTBUBL core; they only keep the target status video selected.
+
 ## Gameplay sequence
 
-1. Back up both cards and install both unique packages without replacing stock JTBUBL.
+1. Back up both cards. Run the install helper with `--dry-run`, review it, then
+   install both unique packages on each card without replacing stock JTBUBL.
 2. Verify identical ROM SHA-256 and DIP settings.
 3. Connect the cable; launch Join/P2, then Host/P1.
 4. Confirm both remain waiting/reset until the peer is ready, then both leave reset.

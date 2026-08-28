@@ -33,7 +33,7 @@ docker run --rm --network host \
 
 The stock ROM-free Pocket output is under `release/pocket/raw`. A ROM is required only to assemble/validate game assets, run ROM-backed simulation, or install a playable package.
 
-## Planned stable entry points
+## Stable entry points
 
 ```bash
 make link2p-lint
@@ -41,10 +41,31 @@ make link2p-unit
 make link2p-link-sim
 make link2p-host
 make link2p-join
+make link2p-diag-host
+make link2p-diag-join
 make link2p-package ROM=/absolute/path OUT=/absolute/private/path
 ```
 
-Host and Join build targets pass mutually exclusive compile-time macros and a common protocol/build ID. The package target refuses a non-absolute ROM or output path.
+`link2p-unit` runs five Icarus testbenches in `jotego/linter`. Host and Join
+build targets pass mutually exclusive compile-time macros and a common
+protocol/build ID to Quartus, try up to four seeds, and preserve the passing
+raw package and reports below `PRIVATE_ARTIFACT_ROOT`. Diagnostic builds keep
+the status grid visible while the complete JTBUBL instance runs behind it.
+
+The package target refuses a non-absolute ROM or output path. It hashes the ROM
+but does not copy it into the generated bundle. Install it later with:
+
+```bash
+<bundle>/install-link2p.sh \
+  --sd-root /absolute/path/to/sd \
+  --role both \
+  --rom /absolute/path/to/bublbobl.rom \
+  --dry-run
+```
+
+Remove `--dry-run` only after reviewing every printed destination. Existing
+files are backed up under `.link2p-backups` on the SD card. No unrelated file
+is deleted and the stock `jotego.jtbubl` folders are never targeted.
 
 ## Private artifacts
 
@@ -54,4 +75,5 @@ Artifacts are written below the externally configured private root:
 <PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/<git-short-sha>/
 ```
 
-No generated package intended for sharing contains a ROM.
+Role builds are staged in `JTBUBL-Link2P/work/normal/{host,join}` before final
+packaging. No generated package intended for sharing contains a ROM.

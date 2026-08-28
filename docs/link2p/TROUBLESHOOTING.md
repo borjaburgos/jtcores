@@ -7,6 +7,8 @@
 - Check SCK activity from Host and confirm Join leaves SCK high impedance.
 - Inspect peer timeout and CRC counters.
 - Two Join packages are indistinguishable from a disconnected cable and intentionally remain waiting.
+- Do not intentionally connect two Host builds: the RTL detects the role error
+  in simulation, but two physical push-pull SCK drivers are an invalid setup.
 
 ## ROLE CONFLICT or BUILD/DIP mismatch
 
@@ -14,6 +16,9 @@
 - Verify protocol/build IDs and source commits in the manifest.
 - Verify identical DIP settings.
 - Power/reset both sessions and retry with a fresh session ID.
+- If a fault is latched, leave the cable connected; both sides first exchange a
+  quiet WAIT state, then the Host creates a new session and reset remains held
+  until the next valid GO/VBL sequence.
 
 ## Input mismatch
 

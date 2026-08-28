@@ -53,6 +53,10 @@ JTFRAME_LF_HW            |         | Horizontal address width for the line-based
 JTFRAME_LF_VW            |         | Vertical address width for the line-based frame buffer (default=8)
 JTFRAME_LF_ZOOM          |         | Frame buffer scaling support directly by the game module
 JTFRAME_LF_SDRAM_BUFFER  | sidi128 | The line-based frame buffer (JTFRAME_LF_BUFFER) is implemented in the second SDRAM. This disables SDRAM rotation, so enable it only in cores that need it
+JTFRAME_LINK2P           | Pocket  | Enables the two-Pocket fixed-slot serial link transport
+JTFRAME_LINK2P_DIAGNOSTIC| Pocket  | Keeps the Link2P status grid visible for ROM-free cable bring-up; requires JTFRAME_LINK2P
+JTFRAME_LINK2P_HOST      | Pocket  | Builds the Link2P SCK-generating Host/P1 role; requires JTFRAME_LINK2P
+JTFRAME_LINK2P_JOIN      | Pocket  | Builds the Link2P externally-clocked Join/P2 role; requires JTFRAME_LINK2P
 JTFRAME_LITE_KEYBOARD    |         | Disables automatic MAME keys mapping
 JTFRAME_LOGO_NOHEX       | Pocket  | Do not display the chip ID on the logo screen
 JTFRAME_DIPBASE          | MiST    | Starting base in status word for MiST dip switches. Do not set in [mist] section of macros.def or the MRA will not be correct
