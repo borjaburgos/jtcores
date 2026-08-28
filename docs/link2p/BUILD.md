@@ -78,24 +78,36 @@ simulator frame, paired-frame count, and CRC. On a host with ImageMagick, open
 or convert a snapshot with `magick latest-a.ppm latest-a.png`. These derived
 screenshots remain under `PRIVATE_ARTIFACT_ROOT` and are not packaged.
 
-The package target refuses a non-absolute ROM or output path. It hashes the ROM
-but does not copy it into the generated bundle. If determinism evidence is
-supplied, packaging accepts only a passing long run with the same ROM hashes,
-the neutral pattern and both scripted seeds, a nonzero alternate reset hold,
-and at least 10,000 equal, valid, non-frozen A/B CRCs per pattern. Install it
-later with:
+The package target refuses a dirty source tree; a ROM, output, or preserved
+build path inside the Git worktree; a non-absolute ROM or output path; or a
+role/mode mismatch in any preserved build. It hashes the ROM but does not copy
+it into the generated bundle. The bundle contains four unique, coexistable
+packages: normal Host and Join, plus always-visible diagnostic Host and Join.
+If determinism evidence is supplied, packaging accepts only a passing long run
+with the same ROM hashes, the neutral pattern and both scripted seeds, a
+nonzero alternate reset hold, and at least 10,000 equal, valid, non-frozen A/B
+CRCs per pattern.
+
+Install both diagnostic roles on each backed-up card first, so either physical
+Pocket can be assigned either role during cable bring-up:
 
 ```bash
 <bundle>/install-link2p.sh \
   --sd-root /absolute/path/to/sd \
   --role both \
+  --mode diagnostic \
   --rom /absolute/path/to/bublbobl.rom \
+  --expected-sha256 529a46c61e96419cdc307c8bb9116c454eea60ab9a10673ae2be16282be53e80 \
   --dry-run
 ```
 
-Remove `--dry-run` only after reviewing every printed destination. Existing
-files are backed up under `.link2p-backups` on the SD card. No unrelated file
-is deleted and the stock `jotego.jtbubl` folders are never targeted.
+After the diagnostic transport gate passes, repeat with `--mode normal` for the
+playable packages. Remove `--dry-run` only after reviewing every printed
+destination, then run the same command without that flag. Existing files are
+backed up under `.link2p-backups` on the SD card. No unrelated file is deleted;
+the diagnostic, normal Link2P, and stock `jotego.jtbubl` folders have distinct
+core and platform IDs. The installer also refuses an SD root that lacks the
+normal Pocket `Assets`, `Cores`, and `Platforms` directories.
 
 ## Private artifacts
 
@@ -105,5 +117,6 @@ Artifacts are written below the externally configured private root:
 <PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/<git-short-sha>/
 ```
 
-Role builds are staged in `JTBUBL-Link2P/work/normal/{host,join}` before final
-packaging. No generated package intended for sharing contains a ROM.
+Role builds are staged in `JTBUBL-Link2P/work/{normal,diagnostic}/{host,join}`
+before final packaging. No generated package intended for sharing contains a
+ROM.

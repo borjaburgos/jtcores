@@ -88,6 +88,35 @@ outside Git at:
 <PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/work/normal/join/
 ```
 
+## Diagnostic Link2P synthesis
+
+Status: both always-visible transport-diagnostic roles pass full Quartus
+analysis, synthesis, fitting, assembly, and timing. These builds contain the
+same complete local JTBUBL implementation as the normal roles; only the target
+video selection keeps the diagnostic grid visible for physical cable bring-up.
+
+```text
+JTCORES commit: 8f48f41158aa45eddee17e2ad28d06e72858d679
+Pocket target commit: ccb61e54625e5cb1a49a92a830c4bbfe3d631f1e
+Quartus: Prime Lite 20.1.1 Build 720
+Device: 5CEBA4F23C8
+
+Diagnostic Host seed 0: PASS, +0.090 ns worst slack
+Diagnostic Host logic/registers: 9,573 ALMs (52%) / 9,670 registers
+Diagnostic Host RBF SHA-256: 9a423870c5f9728c957f4a909b6da9cbc0c166398eafe9357938c2d723ebb0ce
+
+Diagnostic Join seed 0: PASS, +0.096 ns worst slack
+Diagnostic Join logic/registers: 9,584 ALMs (52%) / 9,628 registers
+Diagnostic Join RBF SHA-256: acee8ddb27d5d963cdc24dba0bfc9cae1035a9b44dfea470ec85b779e0325d98
+```
+
+Both roles use 348,587 memory bits, 70 RAM blocks, 26 DSP blocks, and four
+PLLs. The only Critical Warning is the inherited `c4` named-port PLL warning
+already present in the stock baseline. The scoped SDC covers the asynchronous
+cable pins and first synchronizer stages; SCK/SI/SO do not appear in the
+unconstrained-port lists. Reports and ROM-free source packages are preserved at
+`<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/work/diagnostic/{host,join}/`.
+
 ## Stock post-change regression
 
 A no-Link2P build passes with all link output enables permanently disabled and
@@ -127,8 +156,7 @@ Result: PASS
 ```
 
 The two MCU reset-release messages occurred together at the end of the smoke
-window. The required 10,000-frame neutral and scripted runs are still in
-progress/pending; no long-run or bonus-behavior result is claimed yet.
+window.
 
 A short qualification of the alternate timing also passes for both neutral
 and scripted inputs: ROM transfer completes normally, both cores remain in a
@@ -139,8 +167,32 @@ The final long-run cabinet schedules wait 720 post-reset frames, then repeat P1
 Select/coin, P2 coin, both Start buttons, and two-player movement/action pulses
 every 240 frames so the run exercises live gameplay rather than only the boot
 or attract sequence. The second seed reverses Start order and changes both
-players' movement/action phases. Gameplay entry must also be confirmed from
-the private frame previews before the physical gate is opened.
+players' movement/action phases. The primary scripted preview at paired frame
+1,440 visibly reached Round 1 with both player
+sprites, enemies, and bubbles on the board. Its A/B PPMs had identical SHA-256
+`439e02192ba84bca41bd826d9535b6b4c4086399716f328f55a0f0925aedfb6c`,
+confirming live game entry and input exercise.
+
+The three-pattern 10,000-frame gate passes. All patterns ran concurrently,
+each with two complete JTBUBL instances, DIP value `ffff`, and a common 100 ms
+post-download reset hold. Each produced 10,061 paired CRCs because the terminal
+frame boundary follows the requested 10,000-frame window. The generated game
+rate is 59.1894 Hz. A/B CRC files and final A/B frame images are byte-identical
+within every pattern; each stream has thousands of distinct CRCs and is not
+frozen.
+
+```text
+Pattern        Paired frames  Distinct CRCs  CRC-stream SHA-256
+neutral               10,061          5,008  c968e235373e3a2e1bd50f6466aa5df36824cc03cf6c3df91c7c2577b6a6f3ad
+scripted              10,061          8,901  b68151b059b4396dd5cd760752a02b326afa566bc4e24d176661cc89e9fe83e4
+scripted_alt          10,061          8,173  77ce90940800de2613e11042581ce0a22a76a45b9bfda3591ff52a516ebfeed0
+Result: PASS
+```
+
+The run used JTCORES commit
+`8f48f41158aa45eddee17e2ad28d06e72858d679` and Pocket target commit
+`ccb61e54625e5cb1a49a92a830c4bbfe3d631f1e`. Its wall-clock execution took
+approximately 11 hours 39 minutes; the three patterns ran in parallel.
 
 ## Physical hardware
 

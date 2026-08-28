@@ -17,17 +17,29 @@ import tempfile
 
 
 ROLE_CONFIG = {
-    "host": {
+    ("normal", "host"): {
         "core_suffix": "JTBUBLLinkHost",
         "platform": "jtbubl_link2p_host",
         "display": "Bubble Bobble Link2P — Host/P1",
         "rbf": "jtbubl_link2p_host.rbf_r",
     },
-    "join": {
+    ("normal", "join"): {
         "core_suffix": "JTBUBLLinkJoin",
         "platform": "jtbubl_link2p_join",
         "display": "Bubble Bobble Link2P — Join/P2",
         "rbf": "jtbubl_link2p_join.rbf_r",
+    },
+    ("diagnostic", "host"): {
+        "core_suffix": "JTBUBLLinkDiagHost",
+        "platform": "jtbubl_link2p_diag_host",
+        "display": "Bubble Bobble Link2P Diagnostics — Host/P1",
+        "rbf": "jtbubl_link2p_diag_host.rbf_r",
+    },
+    ("diagnostic", "join"): {
+        "core_suffix": "JTBUBLLinkDiagJoin",
+        "platform": "jtbubl_link2p_diag_join",
+        "display": "Bubble Bobble Link2P Diagnostics — Join/P2",
+        "rbf": "jtbubl_link2p_diag_join.rbf_r",
     },
 }
 
@@ -62,6 +74,14 @@ def hashes(path: Path) -> tuple[str, str, int]:
 
 def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
 
 
 def write_json(path: Path, value) -> None:
@@ -187,8 +207,24 @@ def source_manifest(build_root: Path, package: Path) -> dict:
     }
 
 
-def create_role_package(source: Path, destination: Path, role: str, owner: str, version: str, release_date: str) -> Path:
-    config = ROLE_CONFIG[role]
+def validate_source_manifest(manifest: dict, build_root: Path, role: str, mode: str) -> None:
+    if manifest.get("role") != role or manifest.get("mode") != mode:
+        raise RuntimeError(
+            f"build manifest role/mode mismatch in {build_root}: "
+            f"expected {role}/{mode}"
+        )
+
+
+def create_role_package(
+    source: Path,
+    destination: Path,
+    role: str,
+    mode: str,
+    owner: str,
+    version: str,
+    release_date: str,
+) -> Path:
+    config = ROLE_CONFIG[(mode, role)]
     core_id = f"{owner}.{config['core_suffix']}"
     platform = config["platform"]
 
@@ -203,7 +239,7 @@ def create_role_package(source: Path, destination: Path, role: str, owner: str, 
     core_json = load_json(core_json_path)
     metadata = core_json["core"]["metadata"]
     metadata["platform_ids"] = [platform]
-    metadata["shortname"] = f"bubl-link-{role}"
+    metadata["shortname"] = f"bubl-link-{role}" if mode == "normal" else f"bubl-diag-{role}"
     metadata["description"] = config["display"]
     metadata["author"] = owner
     metadata["url"] = f"https://github.com/{owner}/jtcores"
@@ -211,7 +247,7 @@ def create_role_package(source: Path, destination: Path, role: str, owner: str, 
     metadata["date_release"] = release_date
     core_json["core"]["framework"]["hardware"]["link_port"] = True
     core_json["core"]["cores"] = [{
-        "name": f"JTBUBL Link2P {role.title()}",
+        "name": f"JTBUBL Link2P {role.title()}" + (" Diagnostics" if mode == "diagnostic" else ""),
         "id": 0,
         "filename": config["rbf"],
     }]
@@ -239,15 +275,20 @@ def create_role_package(source: Path, destination: Path, role: str, owner: str, 
     write_json(platforms / f"{platform}.json", platform_json)
     shutil.copy2(source / "Platforms" / "_images" / "jtbubl.bin", platforms / "_images" / f"{platform}.bin")
 
-    (destination / f"JTBUBL-LINK2P-{role.upper()}.txt").write_text(
+    (destination / f"JTBUBL-LINK2P-{mode.upper()}-{role.upper()}.txt").write_text(
         f"{config['display']}\n\n"
         "This is a complete local JTBUBL core. It requires the other Link2P role, "
         "a compatible GB/GBC link cable, and a privately supplied bublbobl.rom.\n"
-        "No ROM is included in this package. The stock jotego.jtbubl paths are not changed.\n",
+        + (
+            "This diagnostic build keeps the transport status grid visible for cable bring-up.\n"
+            if mode == "diagnostic" else ""
+        )
+        + "No ROM is included in this package. The stock jotego.jtbubl paths are not changed.\n",
         encoding="utf-8",
     )
     write_json(core_destination / "link2p-build.json", {
         "role": role,
+        "mode": mode,
         "protocol_version": 1,
         "build_id": "0x4c325001",
         "input_delay_frames": 2,
@@ -263,6 +304,8 @@ def main() -> int:
     parser.add_argument("--out", required=True)
     parser.add_argument("--host-build", default=os.environ.get("LINK2P_HOST_BUILD", ""))
     parser.add_argument("--join-build", default=os.environ.get("LINK2P_JOIN_BUILD", ""))
+    parser.add_argument("--diagnostic-host-build", default=os.environ.get("LINK2P_DIAG_HOST_BUILD", ""))
+    parser.add_argument("--diagnostic-join-build", default=os.environ.get("LINK2P_DIAG_JOIN_BUILD", ""))
     parser.add_argument("--determinism-results", default=os.environ.get("LINK2P_DETERMINISM_RESULTS", ""))
     parser.add_argument("--owner", default=os.environ.get("GITHUB_OWNER", "borjaburgos"))
     args = parser.parse_args()
@@ -275,18 +318,55 @@ def main() -> int:
         parser.error("--rom must be an existing absolute file")
     if not output.is_absolute():
         parser.error("--out must be an absolute path")
+    rom = rom.resolve()
+    output = output.resolve(strict=False)
+    if is_within(rom, repo):
+        parser.error("--rom must remain outside the Git worktree")
+    if is_within(output, repo):
+        parser.error("--out must remain outside the Git worktree")
     output.mkdir(parents=True, exist_ok=True)
 
     private_root = Path(os.environ.get("PRIVATE_ARTIFACT_ROOT", str(output))).expanduser()
     host_build = Path(args.host_build).expanduser() if args.host_build else private_root / "JTBUBL-Link2P" / "work" / "normal" / "host"
     join_build = Path(args.join_build).expanduser() if args.join_build else private_root / "JTBUBL-Link2P" / "work" / "normal" / "join"
-    if not host_build.is_absolute() or not join_build.is_absolute():
-        parser.error("Host and Join build roots must be absolute paths")
+    diagnostic_host_build = (
+        Path(args.diagnostic_host_build).expanduser()
+        if args.diagnostic_host_build
+        else private_root / "JTBUBL-Link2P" / "work" / "diagnostic" / "host"
+    )
+    diagnostic_join_build = (
+        Path(args.diagnostic_join_build).expanduser()
+        if args.diagnostic_join_build
+        else private_root / "JTBUBL-Link2P" / "work" / "diagnostic" / "join"
+    )
+    build_roots = (host_build, join_build, diagnostic_host_build, diagnostic_join_build)
+    if any(not build_root.is_absolute() for build_root in build_roots):
+        parser.error("Normal and diagnostic Host/Join build roots must be absolute paths")
+    build_roots = tuple(build_root.resolve() for build_root in build_roots)
+    if any(is_within(build_root, repo) for build_root in build_roots):
+        parser.error("Normal and diagnostic build roots must remain outside the Git worktree")
+    host_build, join_build, diagnostic_host_build, diagnostic_join_build = build_roots
 
     host_source, host_reports = validate_source(host_build, "host")
     join_source, join_reports = validate_source(join_build, "join")
+    diagnostic_host_source, diagnostic_host_reports = validate_source(
+        diagnostic_host_build, "diagnostic host"
+    )
+    diagnostic_join_source, diagnostic_join_reports = validate_source(
+        diagnostic_join_build, "diagnostic join"
+    )
     host_source_manifest = source_manifest(host_build, host_source)
     join_source_manifest = source_manifest(join_build, join_source)
+    diagnostic_host_manifest = source_manifest(diagnostic_host_build, diagnostic_host_source)
+    diagnostic_join_manifest = source_manifest(diagnostic_join_build, diagnostic_join_source)
+    validate_source_manifest(host_source_manifest, host_build, "host", "normal")
+    validate_source_manifest(join_source_manifest, join_build, "join", "normal")
+    validate_source_manifest(
+        diagnostic_host_manifest, diagnostic_host_build, "host", "diagnostic"
+    )
+    validate_source_manifest(
+        diagnostic_join_manifest, diagnostic_join_build, "join", "diagnostic"
+    )
     rom_sha, rom_crc, rom_size = hashes(rom)
 
     super_commit = run_git(repo, "rev-parse", "HEAD")
@@ -294,26 +374,52 @@ def main() -> int:
     dirty = bool(run_git(repo, "status", "--porcelain", fallback="")) or bool(
         run_git(pocket_repo, "status", "--porcelain", fallback="")
     )
+    if dirty:
+        raise RuntimeError("refusing to package from a dirty superproject or Pocket worktree")
     host_version = str(host_source_manifest["jtcores_commit"])[:7]
     join_version = str(join_source_manifest["jtcores_commit"])[:7]
+    diagnostic_host_version = str(diagnostic_host_manifest["jtcores_commit"])[:7]
+    diagnostic_join_version = str(diagnostic_join_manifest["jtcores_commit"])[:7]
     if host_version != join_version:
         raise RuntimeError(f"Host/Join source versions differ: {host_version} vs {join_version}")
-    label = host_version
+    if diagnostic_host_version != diagnostic_join_version:
+        raise RuntimeError(
+            "Diagnostic Host/Join source versions differ: "
+            f"{diagnostic_host_version} vs {diagnostic_join_version}"
+        )
+    label = super_commit[:7]
     final_root = output / "JTBUBL-Link2P" / label
     timestamp = datetime.now(timezone.utc)
-    if final_root.exists():
-        backup = final_root.with_name(final_root.name + ".backup-" + timestamp.strftime("%Y%m%dT%H%M%SZ"))
-        final_root.rename(backup)
-        print(f"Preserved prior bundle at {backup}")
 
     final_root.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".link2p-package-", dir=final_root.parent) as temp_name:
         temp_root = Path(temp_name)
-        host_rbf = create_role_package(host_source, temp_root / "host" / "core-package", "host", args.owner, host_version, timestamp.date().isoformat())
-        join_rbf = create_role_package(join_source, temp_root / "join" / "core-package", "join", args.owner, join_version, timestamp.date().isoformat())
+        release_date = timestamp.date().isoformat()
+        host_rbf = create_role_package(
+            host_source, temp_root / "host" / "core-package",
+            "host", "normal", args.owner, host_version, release_date,
+        )
+        join_rbf = create_role_package(
+            join_source, temp_root / "join" / "core-package",
+            "join", "normal", args.owner, join_version, release_date,
+        )
+        diagnostic_host_rbf = create_role_package(
+            diagnostic_host_source, temp_root / "diagnostic" / "host" / "core-package",
+            "host", "diagnostic", args.owner, diagnostic_host_version, release_date,
+        )
+        diagnostic_join_rbf = create_role_package(
+            diagnostic_join_source, temp_root / "diagnostic" / "join" / "core-package",
+            "join", "diagnostic", args.owner, diagnostic_join_version, release_date,
+        )
 
-        for reports_source, role in ((host_reports, "host"), (join_reports, "join")):
-            destination = temp_root / role / "quartus-reports"
+        report_sets = (
+            (host_reports, Path("host")),
+            (join_reports, Path("join")),
+            (diagnostic_host_reports, Path("diagnostic/host")),
+            (diagnostic_join_reports, Path("diagnostic/join")),
+        )
+        for reports_source, relative in report_sets:
+            destination = temp_root / relative / "quartus-reports"
             if reports_source.is_dir():
                 shutil.copytree(reports_source, destination)
             else:
@@ -347,6 +453,8 @@ def main() -> int:
 
         host_sha, _, _ = hashes(host_rbf)
         join_sha, _, _ = hashes(join_rbf)
+        diagnostic_host_sha, _, _ = hashes(diagnostic_host_rbf)
+        diagnostic_join_sha, _, _ = hashes(diagnostic_join_rbf)
         submodules = run_git(repo, "submodule", "status", "--recursive").splitlines()
         manifest = {
             "build_timestamp_utc": timestamp.isoformat(),
@@ -364,6 +472,10 @@ def main() -> int:
             "build_id": "0x4c325001",
             "host_bitstream_sha256": host_sha,
             "join_bitstream_sha256": join_sha,
+            "diagnostic_jtcores_fork_commit": diagnostic_host_manifest["jtcores_commit"],
+            "diagnostic_pocket_target_commit": diagnostic_host_manifest["pocket_commit"],
+            "diagnostic_host_bitstream_sha256": diagnostic_host_sha,
+            "diagnostic_join_bitstream_sha256": diagnostic_join_sha,
             "rom_size": rom_size,
             "rom_crc32": rom_crc,
             "rom_sha256": rom_sha,
@@ -384,12 +496,20 @@ def main() -> int:
             if path.is_file() and path.name != "SHA256SUMS":
                 sum_lines.append(f"{hashes(path)[0]}  {path.relative_to(temp_root)}")
         (temp_root / "SHA256SUMS").write_text("\n".join(sum_lines) + "\n", encoding="utf-8")
+        if final_root.exists():
+            backup = final_root.with_name(
+                final_root.name + ".backup-" + timestamp.strftime("%Y%m%dT%H%M%SZ")
+            )
+            final_root.rename(backup)
+            print(f"Preserved prior bundle at {backup}")
         temp_root.rename(final_root)
 
     print(f"Created ROM-free Link2P bundle: {final_root}")
     print(f"ROM size={rom_size} crc32={rom_crc} sha256={rom_sha}")
     print(f"Host bitstream SHA-256: {host_sha}")
     print(f"Join bitstream SHA-256: {join_sha}")
+    print(f"Diagnostic Host bitstream SHA-256: {diagnostic_host_sha}")
+    print(f"Diagnostic Join bitstream SHA-256: {diagnostic_join_sha}")
     print("The ROM was hashed but was not copied into the bundle.")
     return 0
 

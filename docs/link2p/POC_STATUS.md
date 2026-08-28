@@ -285,3 +285,129 @@ make link2p-jtbubl-long ROM="$LOCAL_BUBBLE_BOBBLE_ROM"
 
 Not started. SD cards should remain disconnected until the 10,000-frame gate
 and final private package pass. No physical success is claimed.
+
+## 2026-08-28 — diagnostic builds and executing long gate
+
+### Repositories
+
+```text
+Superproject branch/model commit: codex/jtbubl-link2p-poc / 8f48f41158aa45eddee17e2ad28d06e72858d679
+Pocket branch/commit: codex/jtbubl-link2p-poc / ccb61e54625e5cb1a49a92a830c4bbfe3d631f1e
+JTCORES upstream master: 47e6b8dad5b52b6f314813fe3d78807dcce77757
+Pocket upstream master: 2050ac4d09d126ab1af5ad7eba48ef4426804a3f
+```
+
+Packaging/installer documentation changes remain intentionally uncommitted
+while the long simulator is executing. Its final manifest reads `HEAD`, so the
+compiled model and recorded commit must remain `8f48f4115` until it exits.
+
+### Completed work and passing tests
+
+- Diagnostic Host: Quartus PASS seed 0, +0.090 ns, 9,573 ALMs / 9,670
+  registers, RBF SHA-256
+  `9a423870c5f9728c957f4a909b6da9cbc0c166398eafe9357938c2d723ebb0ce`.
+- Diagnostic Join: Quartus PASS seed 0, +0.096 ns, 9,584 ALMs / 9,628
+  registers, RBF SHA-256
+  `acee8ddb27d5d963cdc24dba0bfc9cae1035a9b44dfea470ec85b779e0325d98`.
+- Added four coexistable package identities: normal Host/Join and diagnostic
+  Host/Join. Component packaging, `SHA256SUMS`, ROM exclusion, prepared-SD
+  validation, and normal/diagnostic installer dry-runs pass against temporary
+  two-card layouts while preserving a stock-core marker.
+- GitHub CLI authentication works as `borjaburgos`; the Pocket draft PR is
+  open and its description now records the smoke, synthesis, privacy, and
+  current long-run status.
+- The live long run has three isolated patterns (`neutral`, `scripted`, and
+  `scripted_alt`), each containing two complete JTBUBL instances. At recorded
+  frame 1,440, all three full A/B CRC streams remain identical.
+- Scripted cabinet input logs confirm repeated P1/P2 Select/Coin transitions.
+  The paired frame-1,440 preview visibly shows Round 1 with both players,
+  enemies, and bubbles, and the A/B PPM SHA-256 values are identical.
+
+### Current failures and unavailable inputs
+
+No simulation mismatch or packaging-component failure is active. The long run
+has not yet reached its required 10,000 paired frames per pattern, so no
+long-run PASS or final private bundle is claimed.
+
+```text
+LOCAL_BUBBLE_BOBBLE_ROM: resolved and verified privately
+POCKET_A_SD_ROOT: not mounted/supplied
+POCKET_B_SD_ROOT: not mounted/supplied
+Pocket A/B firmware and physical IDs: not yet recorded
+SD-card identifiers: not yet recorded
+Cable type/model: not yet recorded
+```
+
+### Next exact command
+
+After the three existing named containers finish, inspect their generated
+`result.txt`, commit the packaging/ledger milestone, and package the clean tree
+with the passing run:
+
+```bash
+source /home/borjaburgos/Developer/JOTEGO/private/link2p.env
+export LINK2P_DETERMINISM_RESULTS=/home/borjaburgos/Developer/JOTEGO/private/JTBUBL-Link2P/simulation/determinism/long-8f48f41158aa-VGrO0G
+make link2p-package ROM="$LOCAL_BUBBLE_BOBBLE_ROM" OUT="$PRIVATE_ARTIFACT_ROOT"
+```
+
+### Hardware status
+
+Not started. Keep both SD cards disconnected until the long gate, clean final
+package, checksum verification, and two temporary-card installs pass. No
+physical transport or gameplay success is claimed.
+
+## 2026-08-28 — completed long determinism gate
+
+### Passing result
+
+The neutral, primary scripted, and alternate scripted sessions each reached
+the requested terminal window with 10,061 paired active-frame CRCs. In every
+session the full A and B streams are byte-identical, the final frame images are
+byte-identical, and the output is non-frozen:
+
+```text
+neutral       10,061 frames  5,008 distinct  c968e235373e3a2e1bd50f6466aa5df36824cc03cf6c3df91c7c2577b6a6f3ad
+scripted      10,061 frames  8,901 distinct  b68151b059b4396dd5cd760752a02b326afa566bc4e24d176661cc89e9fe83e4
+scripted_alt  10,061 frames  8,173 distinct  77ce90940800de2613e11042581ce0a22a76a45b9bfda3591ff52a516ebfeed0
+Result: PASS
+```
+
+This is approximately 2 minutes 50 seconds of generated gameplay per pattern
+at 59.1894 Hz and took approximately 11 hours 39 minutes of wall time with the
+three patterns running concurrently. Repeated P1/P2 Coin, Start, movement,
+jump, and bubble-fire inputs were active in both scripted seeds. The preserved
+frame-1,440 preview confirms real two-player Round 1 gameplay.
+
+The supervising desktop shell ended after launching the named Docker workers,
+so its final four small `result.txt` writes did not run. The workers continued
+to the exact terminal frame window. The summaries were recovered only after
+revalidating the canonical ROM and commits, hexadecimal stream format, exact
+A/B byte equality, frame count, distinct-frame count, terminal PPM equality,
+and final audio/framerate artifacts. No simulation output was altered.
+
+### Remaining unavailable inputs
+
+```text
+POCKET_A_SD_ROOT: not mounted/supplied
+POCKET_B_SD_ROOT: not mounted/supplied
+Pocket A/B firmware and physical IDs: not yet recorded
+SD-card identifiers: not yet recorded
+Cable type/model: not yet recorded
+```
+
+### Next exact command
+
+Commit the packaging/evidence milestone so the package source tree is clean,
+then import the passing private run into the final ROM-free bundle:
+
+```bash
+source /home/borjaburgos/Developer/JOTEGO/private/link2p.env
+export LINK2P_DETERMINISM_RESULTS=/home/borjaburgos/Developer/JOTEGO/private/JTBUBL-Link2P/simulation/determinism/long-8f48f41158aa-VGrO0G
+make link2p-package ROM="$LOCAL_BUBBLE_BOBBLE_ROM" OUT="$PRIVATE_ARTIFACT_ROOT"
+```
+
+### Hardware status
+
+Not started. The remaining local gates are clean final packaging, checksum
+verification, and two temporary-card installs. No physical transport or
+gameplay success is claimed.

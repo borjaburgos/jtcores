@@ -15,8 +15,14 @@ from datetime import datetime, timezone
 
 
 ROLE_DATA = {
-    "host": ("borjaburgos.JTBUBLLinkHost", "jtbubl_link2p_host"),
-    "join": ("borjaburgos.JTBUBLLinkJoin", "jtbubl_link2p_join"),
+    ("normal", "host"): ("JTBUBLLinkHost", "jtbubl_link2p_host"),
+    ("normal", "join"): ("JTBUBLLinkJoin", "jtbubl_link2p_join"),
+    ("diagnostic", "host"): (
+        "JTBUBLLinkDiagHost", "jtbubl_link2p_diag_host"
+    ),
+    ("diagnostic", "join"): (
+        "JTBUBLLinkDiagJoin", "jtbubl_link2p_diag_join"
+    ),
 }
 
 
@@ -82,6 +88,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sd-root", required=True)
     parser.add_argument("--role", required=True, choices=("host", "join", "both"))
+    parser.add_argument("--mode", choices=("normal", "diagnostic"), default="normal")
     parser.add_argument("--rom", required=True)
     parser.add_argument("--bundle-root")
     parser.add_argument("--expected-sha256")
@@ -96,6 +103,15 @@ def main() -> int:
         parser.error("--rom must be an existing absolute file")
     sd_root = sd_root.resolve()
     rom = rom.resolve()
+    missing_sd_folders = [
+        folder for folder in ("Assets", "Cores", "Platforms")
+        if not (sd_root / folder).is_dir()
+    ]
+    if missing_sd_folders:
+        parser.error(
+            "--sd-root does not look like a prepared Pocket card; missing: "
+            + ", ".join(missing_sd_folders)
+        )
 
     bundle_root = Path(args.bundle_root).expanduser() if args.bundle_root else Path(__file__).resolve().parent
     if not bundle_root.is_absolute() or not bundle_root.is_dir():
@@ -110,24 +126,26 @@ def main() -> int:
     print(f"ROM {rom}")
     print(f"ROM size={rom_size} crc32={rom_crc32} sha256={rom_sha256}")
     print(f"SD root {sd_root}")
+    print(f"Package mode {args.mode}")
     if args.dry_run:
         print("DRY RUN: no files will be changed")
 
     roles = ("host", "join") if args.role == "both" else (args.role,)
+    package_base = bundle_root if args.mode == "normal" else bundle_root / "diagnostic"
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     backup_root = sd_root / ".link2p-backups" / timestamp
 
     for role in roles:
-        package_root = bundle_root / role / "core-package"
+        package_root = package_base / role / "core-package"
         if not package_root.is_dir():
             parser.error(f"missing {role} package: {package_root}")
 
-        configured_core_id, platform_id = ROLE_DATA[role]
+        configured_core_suffix, platform_id = ROLE_DATA[(args.mode, role)]
         core_matches = list((package_root / "Cores").glob("*.JTBUBLLink*"))
         if len(core_matches) != 1:
             parser.error(f"{role} package has no unique Link2P core folder")
         actual_core_id = core_matches[0].name
-        if actual_core_id.split(".", 1)[-1] != configured_core_id.split(".", 1)[-1]:
+        if actual_core_id.split(".", 1)[-1] != configured_core_suffix:
             parser.error(f"unexpected {role} core identifier: {actual_core_id}")
 
         for source, relative in package_files(package_root):
