@@ -42,6 +42,9 @@
 *.vcd
 *.wav
 *.zip
+*.7z
+*.mra.generated
+PRIVATE-*
 */mist
 */mist/*
 */mist/db
@@ -124,8 +127,13 @@ unzip
 framerate
 /.codex
 /tasks
+/private/
+**/output_files/
+**/db/
+**/incremental_db/
 lint
 AGENTS.md
+!cores/bubl/AGENTS.md
 .jtsandbox
 seed/
 scenes/
