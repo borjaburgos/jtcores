@@ -275,6 +275,21 @@ RECOVER.
 The source correction lets a recovering Join accept a valid fresh Host HELLO.
 The protocol regression now reconnects clock and Join-to-Host data before the
 Host-to-Join data contact to force the observed ordering. All five Link2P unit
-tests pass with this adversarial case. New diagnostic RBFs still need to be
-synthesized and installed; therefore the diagnostic transport gate remains
-open, and normal gameplay packages must not yet be installed.
+tests pass with this adversarial case.
+
+Corrected recovery synthesis passes from JTCORES commit
+`2e5ef55bd650d3b601870a7f7f8e185235ce8d90` and Pocket target commit
+`23429334326fbf3211a6fe42e8939e9dca969d6a`:
+
+```text
+Host seed 0: PASS, +0.117 ns, 9,598 ALMs / 9,645 registers
+Host RBF SHA-256: 62e90b4b21c5c09663395825127d72239cd368f9759e772bdbe974f107882564
+Join seed 0: PASS, +0.100 ns, 9,561 ALMs / 9,612 registers
+Join RBF SHA-256: ecb1a89ef9051282b47b68f23fbf416277d9ad1ee0f84b3a27cd4a53b7738942
+```
+
+The ROM-free private bundle is preserved at
+`<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/2e5ef55`; all 127 entries in its
+`SHA256SUMS` pass. The RBFs still need to be installed and the physical
+reconnect repeated, so the diagnostic transport gate remains open and normal
+gameplay packages must not yet be installed.

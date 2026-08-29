@@ -471,6 +471,13 @@ physical run on 2026-08-29.
 - The source correction allows a recovering Join to accept a valid fresh Host
   HELLO when staggered cable contacts cause it to miss Host's WAIT packet. The
   protocol test now forces this exact contact ordering; all five Link2P unit
-  tests pass. Corrected diagnostic RBF synthesis, SD installation, and the
-  physical reconnect retest remain pending. Normal gameplay has not yet
-  started.
+  tests pass.
+- Corrected recovery Diagnostic Host and Join builds from JTCORES
+  `2e5ef55bd650d3b601870a7f7f8e185235ce8d90` and Pocket target
+  `23429334326fbf3211a6fe42e8939e9dca969d6a` pass seed 0 with +0.117 ns and
+  +0.100 ns worst slack. Their RBF SHA-256 values are
+  `62e90b4b21c5c09663395825127d72239cd368f9759e772bdbe974f107882564`
+  and `ecb1a89ef9051282b47b68f23fbf416277d9ad1ee0f84b3a27cd4a53b7738942`.
+- The private `2e5ef55` bundle passes all 127 recorded SHA-256 checks. SD
+  installation and the physical reconnect retest remain pending. Normal
+  gameplay has not yet started.
