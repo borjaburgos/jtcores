@@ -448,5 +448,29 @@ and Join Quartus builds pass seed 0 with +0.119 ns and +0.122 ns worst slack;
 their RBF SHA-256 values are
 `a35f27dcec68a83ba479f28ecd81f9a8b21c0e8c09c0bcf342ceb5f4a9a4abd5`
 and `c7f28b0437d74be131017b8eac176cc3d8a00465e1619f395b8b0a9fdff266ac`.
-Package refresh, SD reinstall, and a second physical run are next; the
-complete transport gate and gameplay remain unverified.
+The corrected packages were installed on both 32 GB cards for a second
+physical run on 2026-08-29.
+
+## 2026-08-29 — corrected physical session launch
+
+- Black Pocket ran Diagnostic Host; white Pocket ran Diagnostic Join.
+- Both status bands changed to solid green simultaneously, confirming that
+  both endpoints completed the launch handshake and entered `RUN`.
+- Both peer borders remained green, confirming continued valid packet
+  reception in both directions. The role-colored grids remained correct and
+  neither endpoint displayed a red fault band.
+- Private photo evidence is preserved under
+  `<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/hardware/2026-08-29/IMG_9671.jpeg`,
+  SHA-256
+  `ba66a1e66ab3ec4496b6f174c693f98be9743ae3e1e7c1ae5c2666df3cb9ae84`.
+- Session launch is now a physical PASS. Local-input indication remains to be
+  exercised. The disconnect/reconnect check exposed a recovery race: Host
+  stabilized with a green peer border/red status band while Join stabilized
+  with a green peer border/magenta status band. Valid packets were flowing,
+  but Host had advanced to fresh HELLO while Join remained in RECOVER.
+- The source correction allows a recovering Join to accept a valid fresh Host
+  HELLO when staggered cable contacts cause it to miss Host's WAIT packet. The
+  protocol test now forces this exact contact ordering; all five Link2P unit
+  tests pass. Corrected diagnostic RBF synthesis, SD installation, and the
+  physical reconnect retest remain pending. Normal gameplay has not yet
+  started.

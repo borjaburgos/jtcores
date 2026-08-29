@@ -56,9 +56,9 @@ Pocket bridge reset request / ROM load / framework reset
   -> jtbubl_game.rst
 ```
 
-`jtframe_reset` synchronizes the request across clock domains and provides a fixed release tail. The current implementation does not itself wait for a VBL edge. Link2P adds a Pocket-target-only hold request to this existing path and removes that hold only after the handshake is complete and a synchronized top-level Pocket `vblank` edge is observed. It does not add a second game reset generator.
+`jtframe_reset` synchronizes the request across clock domains and provides a fixed release tail. The current implementation does not itself wait for a VBL edge. Link2P adds a Pocket-target-only hold request to this existing path and removes that hold only after the handshake is complete and a synchronized blanking edge from the always-running local diagnostic video timer is observed. It does not add a second game reset generator.
 
-Game `LVBL` is used after release to number logical frames and latch frame-associated controls. The top-level Pocket `vblank` input is used only for startup release because game `LVBL` may be static while JTBUBL is held in reset.
+Game `LVBL` is used after release to number logical frames and latch frame-associated controls. The local diagnostic timer provides the startup boundary because game `LVBL` may be static while JTBUBL is held in reset and the Pocket top-level `vblank` input is Dock-driven.
 
 ## Selected POC design
 

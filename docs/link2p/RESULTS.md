@@ -241,5 +241,40 @@ Join seed 0: PASS, +0.122 ns, 9,563 ALMs / 9,580 registers
 Join RBF SHA-256: c7f28b0437d74be131017b8eac176cc3d8a00465e1619f395b8b0a9fdff266ac
 ```
 
-A second physical diagnostic run remains required before claiming the
-complete transport gate.
+### Corrected diagnostic bring-up, 2026-08-29
+
+The corrected Host package ran on the black Pocket and the corrected Join
+package ran on the white Pocket. Both displays simultaneously showed solid
+green status bands and green peer borders. The green status bands confirm
+that both endpoints completed the launch handshake and entered `RUN`; the
+green borders confirm continued valid peer-packet reception. The role-colored
+grids remained distinct and neither display showed a red fault band.
+
+```text
+Physical serial/framing path: PASS in both directions
+Peer header and packet CRC: PASS in both directions
+Role distinction: PASS
+Session launch: PASS on both endpoints
+Local-input display exercise: pending
+Disconnect/reconnect recovery: FAIL in installed build; recovery race reproduced
+Gameplay: not started
+Evidence SHA-256: ba66a1e66ab3ec4496b6f174c693f98be9743ae3e1e7c1ae5c2666df3cb9ae84
+```
+
+The evidence photo is preserved privately at
+`<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/hardware/2026-08-29/IMG_9671.jpeg`.
+On cable reconnect, Host stabilized with a green peer border and red status
+band while Join stabilized with a green peer border and magenta status band.
+Those indicators identify Host in fresh HELLO with a latched prior fault and
+Join still in RECOVER: valid packets were flowing, but the peers were
+deadlocked at different recovery steps. This can happen when cable contacts
+reconnect at different times: Host consumes Join's WAIT before Join recovers
+framing, advances to HELLO, and the installed Join accepts only WAIT while in
+RECOVER.
+
+The source correction lets a recovering Join accept a valid fresh Host HELLO.
+The protocol regression now reconnects clock and Join-to-Host data before the
+Host-to-Join data contact to force the observed ordering. All five Link2P unit
+tests pass with this adversarial case. New diagnostic RBFs still need to be
+synthesized and installed; therefore the diagnostic transport gate remains
+open, and normal gameplay packages must not yet be installed.

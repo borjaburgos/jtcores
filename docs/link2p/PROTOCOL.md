@@ -46,6 +46,11 @@ FAULT -> RECOVER/WAIT -> fresh HELLO session
 
 Host creates the session ID and repeatedly advertises HELLO. Join accepts only an opposite role with matching version, build, game, and DIP values, then echoes ARMED with the Host session. Host sends GO; both endpoints arm reset release. Each endpoint removes its link reset hold on the next synchronized Pocket `vblank` edge, allowing the existing JTFRAME reset path to complete.
 
+During recovery, both roles advertise WAIT before beginning a fresh session.
+Cable contacts may reconnect at different times, so a recovering Join also
+accepts a valid fresh Host HELLO. This prevents a Host that received WAIT
+first from stranding the Join in RECOVER.
+
 Packets from another session, duplicate/stale sequences, out-of-window frames,
 bad CRCs, incompatible builds/DIPs, peer faults, or peer timeout cannot update
 game inputs. Duplicate and stale sequence flags latch for diagnostics. A
