@@ -478,6 +478,8 @@ physical run on 2026-08-29.
   +0.100 ns worst slack. Their RBF SHA-256 values are
   `62e90b4b21c5c09663395825127d72239cd368f9759e772bdbe974f107882564`
   and `ecb1a89ef9051282b47b68f23fbf416277d9ad1ee0f84b3a27cd4a53b7738942`.
-- The private `2e5ef55` bundle passes all 127 recorded SHA-256 checks. SD
-  installation and the physical reconnect retest remain pending. Normal
+- The private `2e5ef55` bundle passes all 127 recorded SHA-256 checks. Both
+  corrected diagnostic roles were installed and read-back hash verified on
+  32 GB SD UUIDs `D9C0-15E7` and `0403-0201`; the 64 GB card remained out of
+  scope. The physical controls and reconnect retests remain pending. Normal
   gameplay has not yet started.

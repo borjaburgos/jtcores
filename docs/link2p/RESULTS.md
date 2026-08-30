@@ -290,6 +290,8 @@ Join RBF SHA-256: ecb1a89ef9051282b47b68f23fbf416277d9ad1ee0f84b3a27cd4a53b77389
 
 The ROM-free private bundle is preserved at
 `<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/2e5ef55`; all 127 entries in its
-`SHA256SUMS` pass. The RBFs still need to be installed and the physical
-reconnect repeated, so the diagnostic transport gate remains open and normal
-gameplay packages must not yet be installed.
+`SHA256SUMS` pass. Both corrected diagnostic roles were installed and
+read-back hash verified on 32 GB SD UUIDs `D9C0-15E7` and `0403-0201`; the
+64 GB card remained excluded. The physical controls and reconnect checks
+still need to be repeated, so the diagnostic transport gate remains open and
+normal gameplay packages must not yet be installed.
