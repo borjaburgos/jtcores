@@ -506,7 +506,7 @@ def main() -> int:
             "dip_configuration": "runtime dipsw[15:0]; peers must match; Bubble Bobble instance write 0x8300",
             "determinism": determinism,
             "known_limitations": [
-                "Physical two-Pocket transport and gameplay are not yet verified.",
+                "The physical two-Pocket diagnostic transport gate passed; normal linked gameplay is not yet verified.",
                 *( [] if determinism else ["Dual-JTBUBL long-run determinism requires the private ROM."] ),
                 "Join/Join cannot distinguish a missing clock peer from a disconnected cable and remains safely waiting.",
                 "Reconnect requires a fresh automatic session and restarts both local game instances.",
