@@ -481,5 +481,17 @@ physical run on 2026-08-29.
 - The private `2e5ef55` bundle passes all 127 recorded SHA-256 checks. Both
   corrected diagnostic roles were installed and read-back hash verified on
   32 GB SD UUIDs `D9C0-15E7` and `0403-0201`; the 64 GB card remained out of
-  scope. The physical controls and reconnect retests remain pending. Normal
-  gameplay has not yet started.
+  scope.
+
+## 2026-08-30 — physical diagnostic transport gate passed
+
+- White Pocket ran corrected Diagnostic Join/P2 and black Pocket ran
+  corrected Diagnostic Host/P1. Both reached solid-green status bands and
+  green peer borders.
+- D-pad directions, A, B, Select, and Start changed the local-input row on
+  both systems while the link remained green.
+- After a two-second cable disconnect, reconnecting without relaunching either
+  core automatically restored solid-green bands and borders on both systems.
+- The physical diagnostic transport gate is complete. Corrected normal
+  Host/P1 and Join/P2 synthesis and installation are next; real gameplay has
+  not yet started.

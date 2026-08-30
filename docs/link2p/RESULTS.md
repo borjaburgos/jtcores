@@ -292,6 +292,25 @@ The ROM-free private bundle is preserved at
 `<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/2e5ef55`; all 127 entries in its
 `SHA256SUMS` pass. Both corrected diagnostic roles were installed and
 read-back hash verified on 32 GB SD UUIDs `D9C0-15E7` and `0403-0201`; the
-64 GB card remained excluded. The physical controls and reconnect checks
-still need to be repeated, so the diagnostic transport gate remains open and
-normal gameplay packages must not yet be installed.
+64 GB card remained excluded.
+
+### Corrected recovery retest, 2026-08-30
+
+The white Pocket ran Join/P2 and the black Pocket ran Host/P1. Both reached
+solid-green status bands and green peer borders. D-pad directions, A, B,
+Select, and Start changed the local-input row on both systems without a fault.
+After a two-second cable disconnect, reconnecting without exiting either core
+automatically returned both endpoints to solid-green status bands and green
+peer borders.
+
+```text
+Corrected package startup: PASS on both endpoints
+Local-input display exercise: PASS on both endpoints
+Disconnect fault/reset behavior: PASS
+Automatic fresh-session reconnect: PASS
+Diagnostic physical transport gate: PASS
+Gameplay: not started
+```
+
+Normal Host/P1 and Join/P2 gameplay packages may now be built and installed
+for the real-gameplay phase.
