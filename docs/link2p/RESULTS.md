@@ -314,3 +314,21 @@ Gameplay: not started
 
 Normal Host/P1 and Join/P2 gameplay packages may now be built and installed
 for the real-gameplay phase.
+
+### Corrected normal gameplay synthesis, 2026-08-30
+
+Normal Host/P1 and Join/P2 synthesis passes from JTCORES commit
+`b51ee9359944abad1d8c286cc02d4a1ef10ef6a1` and Pocket target commit
+`23429334326fbf3211a6fe42e8939e9dca969d6a`:
+
+```text
+Host seed 0: PASS, +0.121 ns, 9,607 ALMs / 9,650 registers
+Host RBF SHA-256: ce53976ad6b241888bc70c48c67e5ac7ee98b9ff9428abc00aeedd1fd62ed9b9
+Join seed 0: PASS, +0.120 ns, 9,575 ALMs / 9,721 registers
+Join RBF SHA-256: 9f416fb249139c1bbf54e72447bf72b04d9bea71b779dcab6b56b4cf30bb8e01
+```
+
+The combined ROM-free private bundle is preserved at
+`<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/257a4c5`; all 127 entries in its
+`SHA256SUMS` pass. Normal-role SD installation and linked gameplay remain
+pending.

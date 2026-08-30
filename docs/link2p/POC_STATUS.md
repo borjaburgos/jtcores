@@ -495,3 +495,15 @@ physical run on 2026-08-29.
 - The physical diagnostic transport gate is complete. Corrected normal
   Host/P1 and Join/P2 synthesis and installation are next; real gameplay has
   not yet started.
+
+### Normal gameplay builds
+
+- Corrected normal Host/P1 and Join/P2 builds from JTCORES
+  `b51ee9359944abad1d8c286cc02d4a1ef10ef6a1` and Pocket target
+  `23429334326fbf3211a6fe42e8939e9dca969d6a` pass seed 0 with +0.121 ns and
+  +0.120 ns worst slack.
+- Normal Host and Join RBF SHA-256 values are
+  `ce53976ad6b241888bc70c48c67e5ac7ee98b9ff9428abc00aeedd1fd62ed9b9`
+  and `9f416fb249139c1bbf54e72447bf72b04d9bea71b779dcab6b56b4cf30bb8e01`.
+- Combined private bundle `257a4c5` passes all 127 recorded SHA-256 checks.
+  Normal-role SD installation and linked gameplay remain pending.
