@@ -356,8 +356,8 @@ Removing the cable during gameplay safely selected the diagnostic screen.
 Reconnecting returned both cores to the NOTICE screen, but the automatically
 recovered game instance could not start: credits accumulated, then Start
 returned to NOTICE. Exiting both cores and launching Join followed by Host
-restored normal gameplay. The supported POC recovery procedure after any
-cable loss is therefore to reconnect the cable and relaunch both roles.
+restored normal gameplay. For that revision, the recovery procedure after any
+cable loss was therefore to reconnect the cable and relaunch both roles.
 
 The protocol regression now phases the two game-frame inputs independently
 and verifies neutral, Coin, and Start after a staggered-contact reconnect and
@@ -365,3 +365,49 @@ game reset. All five unit tests pass. This shows that the abstract link/input
 pipeline recovers; it does not model JTBUBL's complete mid-game reset state.
 The exact game-level reinitialization cause remains unresolved, but seamless
 reconnection during a live game is an explicit non-goal for this POC.
+
+### Corrected automatic clean restart, 2026-08-30
+
+The relaunch-only result above was superseded after isolating state that the
+transport reset did not clear. CPU reset left the 8 KiB JTBUBL work RAM and
+1 KiB MCU communication RAM intact; a complete core relaunch had implicitly
+reinitialized those FPGA memories. Link2P now scrubs both memories while cable
+reset is held and resets the retained VBL edge state. Stock JTBUBL behavior is
+unchanged.
+
+All six ROM-free tests pass, including a targeted JTBUBL clean-restart RAM
+test. The protocol test also verifies neutral input, Coin, and Start after a
+staggered-contact reconnect. Complete Pocket Link2P lint passes.
+
+Corrected normal Host/P1 and Join/P2 builds use JTCORES commit
+`4febce354fd57d03aa7904c4b061268ef5f5775a` and Pocket target commit
+`10e9d6a5f13a0eec763000013ca30c2014e7a0a0`:
+
+```text
+Host seed 0: PASS, +0.109 ns
+Host RBF SHA-256: 217d1e2f9416817f14b6a0caf5213fbb589523d5d7f4c45386e54c80b35894d6
+Join seed 0: PASS, +0.112 ns
+Join RBF SHA-256: 71d59cd27a47e31095e17acca32776780ecbb8eae07b4d7ad79c9ed8dcacdd6a
+```
+
+Private bundle `4febce3` passes all 127 entries in `SHA256SUMS`. Corrected
+Join/P2 and Host/P1 plus the canonical external ROM were installed and
+read-back hash verified on White 32 GB UUID `D9C0-15E7` and Black 32 GB UUID
+`0403-0201`; the 64 GB card remained excluded.
+
+The physical retest started a four-credit linked game normally. Cable removal
+during gameplay moved both endpoints to the diagnostic/reset screen. After
+reconnect, both returned to a clean NOTICE screen and Select plus Start began
+a new linked game without exiting either core.
+
+```text
+Corrected package startup and credits/Start: PASS
+Cable removal safe reset/debug screen: PASS
+Automatic clean restart after reconnect: PASS
+Post-reconnect credits/Start without core relaunch: PASS
+Live-game progress preservation: unsupported future enhancement
+```
+
+The supported first-release policy is a clean automatic restart after cable
+loss. The interrupted game's progress is intentionally discarded; the build
+does not claim seamless preservation or resumption of live gameplay.

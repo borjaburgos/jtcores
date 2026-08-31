@@ -109,6 +109,28 @@ the diagnostic, normal Link2P, and stock `jotego.jtbubl` folders have distinct
 core and platform IDs. The installer also refuses an SD root that lacks the
 normal Pocket `Assets`, `Cores`, and `Platforms` directories.
 
+### Removable-media write access and FAT recovery
+
+Before writing, identify each card by both capacity and filesystem UUID; never
+rely on a transient `/dev/sdX` name. Confirm that the mounted UUID is the
+intended backed-up 32 GB Pocket card, then run the installer with whatever
+explicit removable-drive/write authorization the execution environment
+requires. In particular, a protected workspace may present `/run/media` as
+read-only even when the host mount is writable. An `EROFS` result from that
+workspace boundary does not by itself prove that the card or FAT filesystem is
+faulty; retry the reviewed installer with explicit removable-media access.
+
+If a card was disconnected without a clean eject and the host itself mounts it
+read-only, unmount it and check the correct partition directly:
+
+```bash
+sudo fsck.fat -a -v /dev/sdXN; echo "exit=$?"
+```
+
+Repeat the check after any repair (`exit=1`) until a clean pass returns
+`exit=0`. Remount it read-write, install, `sync`, compare the installed files'
+hashes with the bundle and external ROM, and unmount/eject it before removal.
+
 ## Private artifacts
 
 Artifacts are written below the externally configured private root:

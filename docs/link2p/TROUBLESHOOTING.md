@@ -34,11 +34,18 @@ Record the first logical frame and both fingerprints. Check, in order: ROM/DIP/b
 ## NOTICE loop after a gameplay cable reconnect
 
 Cable removal intentionally stops both games and selects the diagnostic
-screen. Although the transport can negotiate another session after reconnect,
-the validated normal build does not produce a usable in-place JTBUBL restart:
-credits accumulate, but Start returns to NOTICE. Reconnect the cable, exit both
-cores, launch Join first, then launch Host. A clean relaunch restores linked
-gameplay. Seamless live-game reconnection is outside the POC scope.
+screen. The corrected normal build negotiates a fresh session after reconnect,
+clears Link2P-visible JTBUBL work and MCU communication RAM while reset is
+held, and returns both systems to a clean NOTICE screen. Credits plus Start
+must begin a new game without exiting either core. This deliberately discards
+the interrupted game; seamless preservation or resumption of live-game state
+is outside the POC scope.
+
+If Start loops back to NOTICE, first verify corrected normal bitstreams (Host
+SHA-256 `217d1e2f9416817f14b6a0caf5213fbb589523d5d7f4c45386e54c80b35894d6`,
+Join SHA-256 `71d59cd27a47e31095e17acca32776780ecbb8eae07b4d7ad79c9ed8dcacdd6a`).
+Exit and relaunch Join followed by Host only as a fallback, and preserve the
+build manifests plus the first visible diagnostic state for investigation.
 
 ## Quartus failures
 

@@ -519,9 +519,9 @@ physical run on 2026-08-29.
   Reconnect returned both cores to NOTICE, but credits plus Start returned to
   NOTICE instead of starting a game. Exiting both cores and relaunching Join
   followed by Host restored normal linked gameplay.
-- Supported recovery after cable loss is reconnect, exit both cores, launch
-  Join, then launch Host. Seamless live-game reconnection is an explicit POC
-  non-goal.
+- For that revision, recovery after cable loss was reconnect, exit both cores,
+  launch Join, then launch Host. Seamless live-game reconnection remained an
+  explicit POC non-goal.
 - The protocol regression now uses independently phased Host/Join game-frame
   inputs and verifies neutral, Coin, and Start after staggered reconnect plus
   game reset. All five unit tests pass; the remaining limitation is beyond
@@ -529,3 +529,34 @@ physical run on 2026-08-29.
   JTBUBL internal cause.
 - Core POC gameplay mission: PASS. Physical role swap and a longer gameplay
   soak remain useful final validation.
+
+## 2026-08-30 — automatic clean-restart correction and hardware pass
+
+- The NOTICE loop was isolated to JTBUBL state that survived the transport
+  reset: CPU reset alone did not reinitialize the 8 KiB work RAM or 1 KiB MCU
+  communication RAM, while exiting/relaunching the core did reinitialize those
+  FPGA memories.
+- Link2P now scrubs both memories while cable reset is held and also resets the
+  retained VBL edge state. The change is scoped to Link2P builds and leaves the
+  stock JTBUBL core unchanged.
+- All six ROM-free unit tests pass, including the new JTBUBL clean-restart RAM
+  test. The protocol regression covers staggered reconnect plus post-reconnect
+  Coin and Start, and the complete Pocket Link2P lint passes.
+- Corrected normal builds use JTCORES commit
+  `4febce354fd57d03aa7904c4b061268ef5f5775a` and Pocket target commit
+  `10e9d6a5f13a0eec763000013ca30c2014e7a0a0`. Host and Join pass seed 0
+  timing with +0.109 ns and +0.112 ns worst slack. Their RBF SHA-256 values are
+  `217d1e2f9416817f14b6a0caf5213fbb589523d5d7f4c45386e54c80b35894d6`
+  and `71d59cd27a47e31095e17acca32776780ecbb8eae07b4d7ad79c9ed8dcacdd6a`.
+- Private bundle `4febce3` passes all 127 recorded SHA-256 checks. Corrected
+  Join/P2 and Host/P1 packages plus the canonical external ROM were installed
+  and read-back hash verified on White UUID `D9C0-15E7` and Black UUID
+  `0403-0201`; the 64 GB card remained excluded.
+- Physical retest passed: a four-credit game started normally, cable removal
+  stopped both games at the diagnostic/reset screen, reconnect returned both
+  to a clean NOTICE screen, and Select/Start began a new game without exiting
+  either core.
+- Supported first-release behavior is therefore automatic cold restart after
+  reconnect. The interrupted game's progress is lost; preserving or resuming
+  live gameplay remains an explicit future enhancement rather than a POC
+  requirement.

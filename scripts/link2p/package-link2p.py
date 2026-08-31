@@ -506,10 +506,10 @@ def main() -> int:
             "dip_configuration": "runtime dipsw[15:0]; peers must match; Bubble Bobble instance write 0x8300",
             "determinism": determinism,
             "known_limitations": [
-                "Linked two-Pocket gameplay passed; cable loss requires exiting and relaunching Join followed by Host.",
+                "Cable loss resets both local games; interrupted gameplay and progress are intentionally discarded.",
                 *( [] if determinism else ["Dual-JTBUBL long-run determinism requires the private ROM."] ),
                 "Join/Join cannot distinguish a missing clock peer from a disconnected cable and remains safely waiting.",
-                "Reconnect requires a fresh automatic session and restarts both local game instances.",
+                "Reconnect creates a fresh automatic session and clean game restart; live-game state is not preserved or resumed.",
             ],
         }
         write_json(temp_root / "build-manifest.json", manifest)
