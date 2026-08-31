@@ -411,3 +411,44 @@ Live-game progress preservation: unsupported future enhancement
 The supported first-release policy is a clean automatic restart after cable
 loss. The interrupted game's progress is intentionally discarded; the build
 does not claim seamless preservation or resumption of live gameplay.
+
+### Final POC code review and synthesis, 2026-08-31
+
+A complete review of the Link2P RTL, timing constraints, target integration,
+tests, build scripts, packaging, installer, and documentation produced a small
+set of defensive refinements:
+
+- Stock JTBUBL again retains its original VBL reset logic; the clean-restart
+  initialization remains guarded by `JTFRAME_LINK2P`.
+- A valid packet arriving exactly at the peer-timeout boundary now wins over
+  the timeout decision. A regression test covers that cycle.
+- Fresh sessions clear every input-buffer slot and stale session diagnostics.
+- Preserved role/link state is connected to the Pocket top for SignalTap and
+  the diagnostic video path.
+- The Pocket SDC now names the actual launch-VBL synchronizer.
+- Builds refuse dirty or mismatched submodule source, preserve the reports for
+  the released seed, and record that seed. Packaging rejects mixed source
+  revisions across the four roles.
+
+All six ROM-free tests pass. Link2P Host, Link2P Join, and stock JTBUBL Pocket
+lint pass; the remaining pin/PLL warnings are pre-existing JTFRAME warnings
+also present in earlier builds.
+
+The reviewed role builds use JTCORES commit
+`b9f54d0b95c4e0f77e870b4b5cb606877e0c9199` and Pocket target commit
+`65a1b9d6434fb4d70e64e44c64ff4044cbabb183`:
+
+```text
+Normal Host seed 0: PASS, +0.120 ns
+Normal Host RBF SHA-256: 4f5d3b42b8fdbb3781975994a9ab4a9dad7c961c154199321b727469431ec78b
+Normal Join seed 0: PASS, +0.122 ns
+Normal Join RBF SHA-256: 6a0bae65cf2563cec806382237cb8bce901f129214556b429c2a8b6c7021a456
+Diagnostic Host seed 0: PASS, +0.121 ns
+Diagnostic Host RBF SHA-256: f728a7ff1e92ebc5a334c49831a1eba8e8026b35a96af0601b78f80fa07ecd64
+Diagnostic Join seed 0: PASS, +0.121 ns
+Diagnostic Join RBF SHA-256: 96a10c992d3e7492694dcbf92bd7cb0681a9b5a6f66ac27885fc27a6a9fbd275
+```
+
+The prior normal Host/Join revision remains the latest physical gameplay and
+disconnect/restart PASS. These reviewed bitstreams require one final two-Pocket
+smoke test after installation; no new live-game reconnection claim is made.

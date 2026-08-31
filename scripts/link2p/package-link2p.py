@@ -524,6 +524,16 @@ def main() -> int:
             "packaging_pocket_commit": pocket_commit,
             "submodule_commits": submodules,
             "quartus_version": "20.1.1 Build 720",
+            "quartus_seeds": {
+                "normal": {
+                    "host": host_source_manifest["seed"],
+                    "join": join_source_manifest["seed"],
+                },
+                "diagnostic": {
+                    "host": diagnostic_host_manifest["seed"],
+                    "join": diagnostic_join_manifest["seed"],
+                },
+            },
             "verilator_version": "5.050",
             "protocol_version": 1,
             "build_id": "0x4c325001",

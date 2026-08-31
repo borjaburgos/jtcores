@@ -560,3 +560,30 @@ physical run on 2026-08-29.
   reconnect. The interrupted game's progress is lost; preserving or resuming
   live gameplay remains an explicit future enhancement rather than a POC
   requirement.
+
+## 2026-08-31 — final code review and refreshed builds
+
+- The full branch diff was reviewed for JOTEGO style, target isolation,
+  protocol behavior, reset/CDC handling, timing constraints, tests, packaging,
+  installation safety, and documentation.
+- Defensive corrections cover the exact timeout/valid-packet race, complete
+  fresh-session buffer clearing, preserved diagnostic role/link nets, the
+  launch-VBL SDC name, and Link2P-only JTBUBL VBL reset initialization.
+- Build and package tooling now refuses dirty/mismatched source, records the
+  actual released Quartus seed, preserves the matching reports, and rejects a
+  four-role bundle assembled from mixed source commits.
+- Six ROM-free tests pass, including the timeout-boundary regression and clean
+  JTBUBL RAM restart. Host, Join, and ordinary stock Pocket lint pass.
+- JTCORES `b9f54d0b95c4e0f77e870b4b5cb606877e0c9199` and Pocket
+  `65a1b9d6434fb4d70e64e44c64ff4044cbabb183` produce four passing seed-0
+  builds. Worst slack is +0.120 ns normal Host, +0.122 ns normal Join, and
+  +0.121 ns for both diagnostic roles.
+- Normal Host/Join RBF SHA-256 values are
+  `4f5d3b42b8fdbb3781975994a9ab4a9dad7c961c154199321b727469431ec78b`
+  and `6a0bae65cf2563cec806382237cb8bce901f129214556b429c2a8b6c7021a456`.
+  Diagnostic Host/Join values are
+  `f728a7ff1e92ebc5a334c49831a1eba8e8026b35a96af0601b78f80fa07ecd64`
+  and `96a10c992d3e7492694dcbf92bd7cb0681a9b5a6f66ac27885fc27a6a9fbd275`.
+- The previous role pair remains the latest physical PASS. Install and smoke
+  test these refreshed images on both Pockets before treating them as the
+  hardware-validated release candidate.
