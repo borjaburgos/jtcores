@@ -163,7 +163,9 @@ always @(posedge clk, posedge rst) begin
     if( rst ) begin
         main_rst_n <= 0;
         wdog_cnt   <= 8'd0;
+`ifdef JTFRAME_LINK2P
         last_VBL   <= 1'b0;
+`endif
     end else begin
         last_VBL  <= VBL_gated;
         if( tres_cs )

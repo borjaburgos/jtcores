@@ -33,8 +33,9 @@ CRC-8 uses polynomial `0x07`, initial value `0x00`, over every packet bit except
 At the hardware defaults, 48 MHz `clk48` and a half divider of 24 produce a
 1 MHz cable clock. A 192-bit transfer takes 192 microseconds and is followed by
 a four-microsecond low-SCK framing gap. Join oversamples SCK/SI through explicit
-synchronizers; Host synchronizes SI. CRC is accumulated one bit per received
-edge so no packet-wide combinational CRC path exists.
+synchronizers; Host synchronizes SI. Receive CRC is accumulated one bit per
+sampled edge. Transmit CRC is calculated from the packet before a serial slot;
+both role builds must continue to pass Pocket timing analysis.
 
 ## Messages and startup
 

@@ -4,7 +4,9 @@
 
 The proof of concept runs one complete, independent JTBUBL instance on each Analogue Pocket. Each instance owns all writable game state and produces its own video and audio. The link cable transports only startup coordination, frame-associated inputs, and diagnostics.
 
-JTBUBL remains unchanged unless deterministic tests prove that a target-only design cannot keep two instances synchronized.
+Stock JTBUBL builds retain their existing logic. Link2P-specific JTBUBL changes
+must be compile-time guarded and require evidence that target-only logic cannot
+provide a clean, deterministic restart.
 
 ## Existing Pocket paths
 
@@ -94,10 +96,15 @@ borjaburgos.JTBUBLLinkJoin
 
 The install helper accepts an external assembled `.rom`, verifies its hash, and copies it directly to both unique Assets trees on an SD card. ROM data never enters Git or a distributable package.
 
-## Deferred validation
+## Validation status
 
-ROM CRC cannot be embedded until the user's local ROM is supplied. The first
-POC therefore verifies and records ROM identity in the install manifest/helper;
-the on-wire handshake currently checks build, game, and DIP identity. Hardware
-transport, startup alignment, long-run MCU behavior, and cable-removal behavior
-require two physical Pockets.
+The accepted local ROM is identified by size and cryptographic hashes before
+simulation, packaging, or installation; ROM bytes never enter Git or the
+ROM-free bundle. Dual-instance simulation has matched video and audio across
+three 10,000-frame input patterns and an alternate common reset timing.
+
+Two Pocket hardware testing has confirmed startup, two-player controls,
+gameplay through multiple levels, and automatic recovery after cable removal.
+Recovery intentionally discards the interrupted game, scrubs Link2P-visible
+JTBUBL work RAM, and returns both peers to a clean NOTICE/start flow after
+reconnection. Preserving a live game across a disconnect is outside this POC.

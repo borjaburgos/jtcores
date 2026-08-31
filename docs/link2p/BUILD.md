@@ -48,10 +48,12 @@ make link2p-jtbubl-smoke ROM=/absolute/path/to/bublbobl.rom
 make link2p-jtbubl-long ROM=/absolute/path/to/bublbobl.rom
 ```
 
-`link2p-unit` runs five Icarus testbenches in `jotego/linter`. Host and Join
+`link2p-unit` runs six Icarus testbenches in `jotego/linter`. Host and Join
 build targets pass mutually exclusive compile-time macros and a common
 protocol/build ID to Quartus, try up to four seeds, and preserve the passing
-raw package and reports below `PRIVATE_ARTIFACT_ROOT`. Diagnostic builds keep
+raw package and the reports for its matching seed below
+`PRIVATE_ARTIFACT_ROOT`. Builds refuse dirty source trees or a Pocket checkout
+that differs from the submodule commit pinned by JTCORES. Diagnostic builds keep
 the status grid visible while the complete JTBUBL instance runs behind it.
 
 The ROM-backed determinism targets require the assembled Bubble Bobble Japan
@@ -79,10 +81,12 @@ or convert a snapshot with `magick latest-a.ppm latest-a.png`. These derived
 screenshots remain under `PRIVATE_ARTIFACT_ROOT` and are not packaged.
 
 The package target refuses a dirty source tree; a ROM, output, or preserved
-build path inside the Git worktree; a non-absolute ROM or output path; or a
-role/mode mismatch in any preserved build. It hashes the ROM but does not copy
-it into the generated bundle. The bundle contains four unique, coexistable
-packages: normal Host and Join, plus always-visible diagnostic Host and Join.
+build path inside the Git worktree; a non-absolute ROM or output path; a
+role/mode mismatch; or mixed JTCORES/Pocket source commits across the four
+preserved builds. It hashes the ROM but does not copy it into the generated
+bundle. The bundle is named after the bitstream source commit and contains four
+unique, coexistable packages: normal Host and Join, plus always-visible
+diagnostic Host and Join.
 If determinism evidence is supplied, packaging accepts only a passing long run
 with the same ROM hashes, the neutral pattern and both scripted seeds, a
 nonzero alternate reset hold, and at least 10,000 equal, valid, non-frozen A/B

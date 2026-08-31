@@ -130,7 +130,6 @@ framerate
 /tasks
 /private/
 **/output_files/
-**/db/
 **/incremental_db/
 lint
 AGENTS.md

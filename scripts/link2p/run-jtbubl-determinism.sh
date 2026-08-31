@@ -92,8 +92,6 @@ commit=$(git rev-parse --short=12 HEAD)
 artifact_base=${private_root}/JTBUBL-Link2P/simulation/determinism
 mkdir -p "${artifact_base}"
 run_root=$(mktemp -d "${artifact_base}/${mode}-${commit}-XXXXXX")
-mountpoint=${repo}/cores/bubl/ver/link2p-determinism
-mkdir -p "${mountpoint}"
 
 cp --reflink=auto "${rom}" "${run_root}/rom.bin"
 # The simulation BRAM model reads the MCU region separately. In the assembled

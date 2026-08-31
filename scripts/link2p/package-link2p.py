@@ -48,7 +48,7 @@ ROLE_CONFIG = {
     },
 }
 
-FORBIDDEN_SUFFIXES = {".rom", ".zip", ".7z", ".sof", ".rbf"}
+FORBIDDEN_SUFFIXES = {".rom", ".zip", ".7z", ".sof", ".rbf", ".rbf_r"}
 
 
 def validate_role_config(owner: str) -> None:
@@ -68,7 +68,7 @@ def validate_role_config(owner: str) -> None:
             raise RuntimeError(f"Pocket bitstream filename is too long for {mode}/{role}")
 
 
-def run_git(repo: Path, *args: str, fallback: str = "unknown") -> str:
+def run_git(repo: Path, *args: str) -> str:
     try:
         result = subprocess.run(
             ["git", "-C", str(repo), *args],
@@ -77,9 +77,17 @@ def run_git(repo: Path, *args: str, fallback: str = "unknown") -> str:
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
         )
-        return result.stdout.strip() or fallback
-    except (OSError, subprocess.CalledProcessError):
-        return fallback
+        return result.stdout.strip()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        command = " ".join(args)
+        raise RuntimeError(f"Git command failed in {repo}: {command}") from exc
+
+
+def run_git_optional(repo: Path, *args: str) -> str:
+    try:
+        return run_git(repo, *args) or "unknown"
+    except RuntimeError:
+        return "unknown"
 
 
 def hashes(path: Path) -> tuple[str, str, int]:
@@ -218,15 +226,11 @@ def validate_source(build_root: Path, role: str) -> tuple[Path, Path]:
     return package, reports
 
 
-def source_manifest(build_root: Path, package: Path) -> dict:
+def source_manifest(build_root: Path) -> dict:
     path = build_root / "source-manifest.json"
-    if path.is_file():
-        return load_json(path)
-    core_json = load_json(package / "Cores" / "jotego.jtbubl" / "core.json")
-    return {
-        "jtcores_commit": core_json["core"]["metadata"].get("version", "unknown"),
-        "pocket_commit": "unknown",
-    }
+    if not path.is_file():
+        raise RuntimeError(f"build is missing its source manifest: {build_root}")
+    return load_json(path)
 
 
 def validate_source_manifest(manifest: dict, build_root: Path, role: str, mode: str) -> None:
@@ -235,6 +239,24 @@ def validate_source_manifest(manifest: dict, build_root: Path, role: str, mode: 
             f"build manifest role/mode mismatch in {build_root}: "
             f"expected {role}/{mode}"
         )
+    for key in ("jtcores_commit", "pocket_commit"):
+        value = manifest.get(key)
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{40}", value) is None:
+            raise RuntimeError(f"invalid {key} in {build_root}")
+    seed = manifest.get("seed")
+    if not isinstance(seed, int) or isinstance(seed, bool) or seed < 0:
+        raise RuntimeError(f"invalid Quartus seed in {build_root}")
+
+
+def validate_matching_sources(named_manifests: tuple[tuple[str, dict], ...]) -> None:
+    reference_name, reference = named_manifests[0]
+    for name, manifest in named_manifests[1:]:
+        for key in ("jtcores_commit", "pocket_commit"):
+            if manifest[key] != reference[key]:
+                raise RuntimeError(
+                    f"{name} and {reference_name} {key} values differ: "
+                    f"{manifest[key]} vs {reference[key]}"
+                )
 
 
 def create_role_package(
@@ -378,10 +400,10 @@ def main() -> int:
     diagnostic_join_source, diagnostic_join_reports = validate_source(
         diagnostic_join_build, "diagnostic join"
     )
-    host_source_manifest = source_manifest(host_build, host_source)
-    join_source_manifest = source_manifest(join_build, join_source)
-    diagnostic_host_manifest = source_manifest(diagnostic_host_build, diagnostic_host_source)
-    diagnostic_join_manifest = source_manifest(diagnostic_join_build, diagnostic_join_source)
+    host_source_manifest = source_manifest(host_build)
+    join_source_manifest = source_manifest(join_build)
+    diagnostic_host_manifest = source_manifest(diagnostic_host_build)
+    diagnostic_join_manifest = source_manifest(diagnostic_join_build)
     validate_source_manifest(host_source_manifest, host_build, "host", "normal")
     validate_source_manifest(join_source_manifest, join_build, "join", "normal")
     validate_source_manifest(
@@ -390,12 +412,19 @@ def main() -> int:
     validate_source_manifest(
         diagnostic_join_manifest, diagnostic_join_build, "join", "diagnostic"
     )
+    named_manifests = (
+        ("normal Host", host_source_manifest),
+        ("normal Join", join_source_manifest),
+        ("diagnostic Host", diagnostic_host_manifest),
+        ("diagnostic Join", diagnostic_join_manifest),
+    )
+    validate_matching_sources(named_manifests)
     rom_sha, rom_crc, rom_size = hashes(rom)
 
     super_commit = run_git(repo, "rev-parse", "HEAD")
     pocket_commit = run_git(pocket_repo, "rev-parse", "HEAD")
-    dirty = bool(run_git(repo, "status", "--porcelain", fallback="")) or bool(
-        run_git(pocket_repo, "status", "--porcelain", fallback="")
+    dirty = bool(run_git(repo, "status", "--porcelain")) or bool(
+        run_git(pocket_repo, "status", "--porcelain")
     )
     if dirty:
         raise RuntimeError("refusing to package from a dirty superproject or Pocket worktree")
@@ -410,7 +439,10 @@ def main() -> int:
             "Diagnostic Host/Join source versions differ: "
             f"{diagnostic_host_version} vs {diagnostic_join_version}"
         )
-    label = super_commit[:7]
+    # Name the bundle after the bitstream source. Packaging may legitimately
+    # run from a later clean documentation/tooling commit, which is recorded
+    # separately in build-manifest.json.
+    label = host_version
     final_root = output / "JTBUBL-Link2P" / label
     timestamp = datetime.now(timezone.utc)
 
@@ -483,9 +515,11 @@ def main() -> int:
             "build_timestamp_utc": timestamp.isoformat(),
             "packaging_source_dirty": dirty,
             "jtcores_fork_commit": host_source_manifest["jtcores_commit"],
-            "jtcores_upstream_commit": run_git(repo, "rev-parse", "upstream/master"),
+            "jtcores_upstream_commit": run_git_optional(repo, "rev-parse", "upstream/master"),
             "pocket_target_commit": host_source_manifest["pocket_commit"],
-            "pocket_target_upstream_commit": run_git(pocket_repo, "rev-parse", "upstream/master"),
+            "pocket_target_upstream_commit": run_git_optional(
+                pocket_repo, "rev-parse", "upstream/master"
+            ),
             "packaging_jtcores_commit": super_commit,
             "packaging_pocket_commit": pocket_commit,
             "submodule_commits": submodules,
