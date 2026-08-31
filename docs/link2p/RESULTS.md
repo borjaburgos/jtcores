@@ -330,5 +330,6 @@ Join RBF SHA-256: 9f416fb249139c1bbf54e72447bf72b04d9bea71b779dcab6b56b4cf30bb8e
 
 The combined ROM-free private bundle is preserved at
 `<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/257a4c5`; all 127 entries in its
-`SHA256SUMS` pass. Normal-role SD installation and linked gameplay remain
-pending.
+`SHA256SUMS` pass. Both normal roles and their canonical ROM were installed
+and read-back hash verified on 32 GB SD UUIDs `D9C0-15E7` and `0403-0201`;
+the 64 GB card remained excluded. Linked gameplay remains pending.

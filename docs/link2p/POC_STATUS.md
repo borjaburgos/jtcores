@@ -506,4 +506,6 @@ physical run on 2026-08-29.
   `ce53976ad6b241888bc70c48c67e5ac7ee98b9ff9428abc00aeedd1fd62ed9b9`
   and `9f416fb249139c1bbf54e72447bf72b04d9bea71b779dcab6b56b4cf30bb8e01`.
 - Combined private bundle `257a4c5` passes all 127 recorded SHA-256 checks.
-  Normal-role SD installation and linked gameplay remain pending.
+  Both normal roles and their canonical ROM were installed and read-back hash
+  verified on 32 GB SD UUIDs `D9C0-15E7` and `0403-0201`; the 64 GB card
+  remained out of scope. Linked gameplay remains pending.
