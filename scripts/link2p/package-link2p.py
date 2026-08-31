@@ -49,6 +49,10 @@ ROLE_CONFIG = {
 }
 
 FORBIDDEN_SUFFIXES = {".rom", ".zip", ".7z", ".sof", ".rbf", ".rbf_r"}
+PROTOCOL_VERSION = 1
+BUILD_ID = "0x4c325002"
+SERIAL_CLOCK_HZ = 250_000
+INPUT_DELAY_FRAMES = 2
 
 
 def validate_role_config(owner: str) -> None:
@@ -333,9 +337,10 @@ def create_role_package(
     write_json(core_destination / "link2p-build.json", {
         "role": role,
         "mode": mode,
-        "protocol_version": 1,
-        "build_id": "0x4c325001",
-        "input_delay_frames": 2,
+        "protocol_version": PROTOCOL_VERSION,
+        "build_id": BUILD_ID,
+        "serial_clock_hz": SERIAL_CLOCK_HZ,
+        "input_delay_frames": INPUT_DELAY_FRAMES,
         "source_version": version,
         "rom_included": False,
     })
@@ -535,8 +540,9 @@ def main() -> int:
                 },
             },
             "verilator_version": "5.050",
-            "protocol_version": 1,
-            "build_id": "0x4c325001",
+            "protocol_version": PROTOCOL_VERSION,
+            "build_id": BUILD_ID,
+            "serial_clock_hz": SERIAL_CLOCK_HZ,
             "host_bitstream_sha256": host_sha,
             "join_bitstream_sha256": join_sha,
             "diagnostic_jtcores_fork_commit": diagnostic_host_manifest["jtcores_commit"],

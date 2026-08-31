@@ -66,7 +66,9 @@ Game `LVBL` is used after release to number logical frames and latch frame-assoc
 
 - Two compile-time packages: `JTFRAME_LINK2P_HOST` and `JTFRAME_LINK2P_JOIN`.
 - Fixed-size full-duplex serial slots over SO/SI.
-- Host-generated SCK at a conservative rate well below the 48 MHz Pocket system clock.
+- Host-generated 250 kHz SCK, leaving more than twenty complete packet slots
+  per 59.19 Hz game frame while matching the cable-rate class used by the
+  original handheld serial interfaces.
 - CRC-protected packet with protocol/build/game identity, role, session, sequence, target frame, local controls, DIP value, status, and previous-frame video fingerprint.
 - Host/Join handshake while both games remain in reset.
 - Two-frame input pipeline. Inputs sampled during logical frame N target N+2.

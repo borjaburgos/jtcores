@@ -21,7 +21,7 @@ Version 1 is a 192-bit, MSB-first packet:
 [135:120] target logical frame
 [119:108] local active-low joystick/start/coin sample
 [107:92]  DIP tag
-[91:60]   build ID 0x4c325001
+[91:60]   build ID 0x4c325002
 [59:52]   game ID 0x42
 [51:20]   previous completed-frame video CRC-32
 [19:8]    sender logical-frame low bits
@@ -30,12 +30,14 @@ Version 1 is a 192-bit, MSB-first packet:
 
 CRC-8 uses polynomial `0x07`, initial value `0x00`, over every packet bit except the transmitted CRC byte.
 
-At the hardware defaults, 48 MHz `clk48` and a half divider of 24 produce a
-1 MHz cable clock. A 192-bit transfer takes 192 microseconds and is followed by
-a four-microsecond low-SCK framing gap. Join oversamples SCK/SI through explicit
-synchronizers; Host synchronizes SI. Receive CRC is accumulated one bit per
-sampled edge. Transmit CRC is calculated from the packet before a serial slot;
-both role builds must continue to pass Pocket timing analysis.
+At the hardware defaults, 48 MHz `clk48` and a half divider of 96 produce a
+250 kHz cable clock. A 192-bit transfer takes 768 microseconds and is followed
+by a 16-microsecond low-SCK framing gap. The framing detector requires eight
+microseconds of low SCK, four times a normal low half-bit interval. Join
+oversamples SCK/SI through explicit synchronizers; Host synchronizes SI.
+Receive CRC is accumulated one bit per sampled edge. Transmit CRC is calculated
+from the packet before a serial slot; both role builds must continue to pass
+Pocket timing analysis.
 
 ## Messages and startup
 
