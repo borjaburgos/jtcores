@@ -3,8 +3,8 @@ set -euo pipefail
 
 mode=${1:-}
 rom=${2:-}
-[[ ${mode} == smoke || ${mode} == long ]] || {
-    echo "usage: $0 smoke|long /absolute/path/to/bublbobl.rom" >&2
+[[ ${mode} == smoke || ${mode} == long || ${mode} == recovery ]] || {
+    echo "usage: $0 smoke|long|recovery /absolute/path/to/bublbobl.rom" >&2
     exit 2
 }
 [[ ${rom} == /* && -f ${rom} ]] || {
@@ -59,11 +59,29 @@ case ${mode} in
         # that determinism is not an artifact of the default release instant.
         reset_delay=100
         ;;
+    recovery)
+        frames=${LINK2P_RECOVERY_FRAMES:-2400}
+        patterns=(scripted)
+        reset_delay=
+        runtime_reset_frame=${LINK2P_RUNTIME_RESET_FRAME:-1300}
+        runtime_reset_hold_ms=${LINK2P_RUNTIME_RESET_HOLD_MS:-200}
+        ;;
 esac
 [[ ${frames} =~ ^[1-9][0-9]*$ ]] || {
     echo "frame count must be a positive integer" >&2
     exit 2
 }
+if [[ ${mode} == recovery ]]; then
+    [[ ${runtime_reset_frame} =~ ^[1-9][0-9]*$ &&
+       ${runtime_reset_hold_ms} =~ ^[1-9][0-9]*$ ]] || {
+        echo "runtime reset frame and hold must be positive integers" >&2
+        exit 2
+    }
+    (( runtime_reset_frame < frames )) || {
+        echo "runtime reset frame must occur before the requested final frame" >&2
+        exit 2
+    }
+fi
 verilator_threads=${LINK2P_VERILATOR_THREADS:-2}
 [[ ${verilator_threads} =~ ^[1-9][0-9]*$ ]] || {
     echo "LINK2P_VERILATOR_THREADS must be a positive integer" >&2
@@ -100,6 +118,12 @@ fi
 jtsim_args=(-verilator -load -dipsw ffff -video "${simulation_frames}" -fast -batch)
 if [[ -n ${reset_delay} ]]; then
     jtsim_args+=(-d "LINK2P_RESET_HOLD_MS=${reset_delay}")
+fi
+if [[ ${mode} == recovery ]]; then
+    simulation_frames=$((frames + 60))
+    jtsim_args=(-verilator -load -dipsw ffff -video "${simulation_frames}" -fast -batch
+        -d "LINK2P_RUNTIME_RESET_FRAME=${runtime_reset_frame}"
+        -d "LINK2P_RUNTIME_RESET_HOLD_MS=${runtime_reset_hold_ms}")
 fi
 
 printf 'ROM accepted: size=%s crc32=%s sha256=%s md5=%s\n' \
@@ -228,6 +252,8 @@ done
     printf 'simulator_frame_limit=%s\n' "${simulation_frames}"
     printf 'patterns=%s\n' "${patterns[*]}"
     printf 'post_download_reset_hold_ms=%s\n' "${reset_delay:-0}"
+    printf 'runtime_reset_frame=%s\n' "${runtime_reset_frame:-0}"
+    printf 'runtime_reset_hold_ms=%s\n' "${runtime_reset_hold_ms:-0}"
     printf 'verilator_threads=%s\n' "${verilator_threads}"
     printf 'rom_size=%s\n' "${rom_size}"
     printf 'rom_crc32=%s\n' "${rom_crc32}"

@@ -157,6 +157,10 @@ void storeProgress( int simulator_frame, int recorded_frames, uint32_t crc32 ) {
     class_replacement = class_anchor + '''#ifdef _LINK2P_RESET_HOLD_MS
     vluint64_t link2p_reset_release_time = 0;
 #endif
+#ifdef _LINK2P_RUNTIME_RESET_FRAME
+    bool link2p_runtime_reset_started = false;
+    vluint64_t link2p_runtime_reset_release_time = 0;
+#endif
 '''
     if text.count(class_anchor) != 1:
         raise SystemExit("unsupported JTFRAME test.cpp: download state did not match")
@@ -180,6 +184,27 @@ void storeProgress( int simulator_frame, int recorded_frames, uint32_t crc32 ) {
     if text.count(release_anchor) != 1:
         raise SystemExit("unsupported JTFRAME test.cpp: download reset release did not match")
     text = text.replace(release_anchor, release_replacement)
+    runtime_anchor = "        simtime += multi_clock->get_semi_period();\n#ifdef _DUMP\n"
+    runtime_replacement = '''#ifdef _LINK2P_RUNTIME_RESET_FRAME
+        if( !link2p_runtime_reset_started && !game.ioctl_rom && !game.dwnld_busy &&
+            frame_cnt>=_LINK2P_RUNTIME_RESET_FRAME ) {
+            fprintf(stderr, "\\nLink2P runtime reset asserted (frame %d)\\n", frame_cnt);
+            reset(1);
+            link2p_runtime_reset_started = true;
+            link2p_runtime_reset_release_time = simtime + _LINK2P_RUNTIME_RESET_HOLD_MS*1000'000L;
+        }
+        if( link2p_runtime_reset_release_time!=0 && simtime>=link2p_runtime_reset_release_time ) {
+            fprintf(stderr, "\\nLink2P runtime reset released (frame %d)\\n", frame_cnt);
+            reset(0);
+            link2p_runtime_reset_release_time = 0;
+        }
+#endif
+        simtime += multi_clock->get_semi_period();
+#ifdef _DUMP
+'''
+    if text.count(runtime_anchor) < 1:
+        raise SystemExit("unsupported JTFRAME test.cpp: runtime reset insertion did not match")
+    text = text.replace(runtime_anchor, runtime_replacement, 1)
     if text.count("    } dump;") != 1:
         raise SystemExit("unsupported JTFRAME test.cpp: video buffers did not match")
     text = text.replace("    } dump;", "    } dump, dump_b;")

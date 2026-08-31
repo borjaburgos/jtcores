@@ -2,7 +2,8 @@ SHELL := /usr/bin/env bash
 
 .PHONY: link2p-lint link2p-unit link2p-link-sim \
 	link2p-host link2p-join link2p-diag-host link2p-diag-join \
-	link2p-package link2p-jtbubl-smoke link2p-jtbubl-long
+	link2p-package link2p-jtbubl-smoke link2p-jtbubl-long \
+	link2p-jtbubl-recovery
 
 link2p-lint:
 	./scripts/link2p/run-lint.sh
@@ -32,3 +33,6 @@ link2p-jtbubl-smoke:
 
 link2p-jtbubl-long:
 	./scripts/link2p/run-jtbubl-determinism.sh long "$(ROM)"
+
+link2p-jtbubl-recovery:
+	./scripts/link2p/run-jtbubl-determinism.sh recovery "$(ROM)"

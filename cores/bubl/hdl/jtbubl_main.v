@@ -113,6 +113,28 @@ wire [ 7:0] work2main_dout, work2sub_dout;
 wire        sub_m1_n, main_m1_n;
 wire        cen_mcu = tokio ? cen3 : cen4;
 
+`ifdef JTFRAME_LINK2P
+wire [12:0] link2p_clear_addr;
+wire        link2p_clear_we;
+
+jtbubl_link2p_ram_clear #(.AW(13)) u_link2p_ram_clear(
+    .rst    ( rst                ),
+    .clk    ( clk                ),
+    .addr   ( link2p_clear_addr  ),
+    .we     ( link2p_clear_we    )
+);
+`else
+wire [12:0] link2p_clear_addr = 13'd0;
+wire        link2p_clear_we   = 1'b0;
+`endif
+
+wire [12:0] work_addr0 = link2p_clear_we ? link2p_clear_addr : main_addr[12:0];
+wire [ 7:0] work_data0 = link2p_clear_we ? 8'd0               : main_dout;
+wire        work_we0   = link2p_clear_we | (~main_wrn & lde);
+wire [ 9:0] comm_addr0 = link2p_clear_we ? link2p_clear_addr[9:0] : main_addr[9:0];
+wire [ 7:0] comm_data0 = link2p_clear_we ? 8'd0                  : main_dout;
+wire        comm_we0   = link2p_clear_we | mcram_we;
+
 wire        main_halt_n;
 reg         lde, sde; // original signal names: lde = main drives, sde = sub drives
 wire        VBL_gated;
@@ -141,6 +163,7 @@ always @(posedge clk, posedge rst) begin
     if( rst ) begin
         main_rst_n <= 0;
         wdog_cnt   <= 8'd0;
+        last_VBL   <= 1'b0;
     end else begin
         last_VBL  <= VBL_gated;
         if( tres_cs )
@@ -274,9 +297,9 @@ end
 // Time shared
 jtframe_dual_ram #(.AW(13)) u_work(
     .clk0   ( clk             ),
-    .data0  ( main_dout       ),
-    .addr0  ( main_addr[12:0] ),
-    .we0    ( ~main_wrn & lde ),
+    .data0  ( work_data0      ),
+    .addr0  ( work_addr0      ),
+    .we0    ( work_we0        ),
     .q0     ( work2main_dout  ),
     // Sub CPU
     .clk1   ( clk             ),
@@ -433,9 +456,9 @@ jtframe_dual_ram #(.AW(10)) u_comm(
     .clk0   ( clk              ),
     .clk1   ( clk              ),
     // Main CPU
-    .addr0  ( main_addr[9:0]     ),
-    .data0  ( main_dout          ),
-    .we0    ( mcram_we           ),
+    .addr0  ( comm_addr0         ),
+    .data0  ( comm_data0         ),
+    .we0    ( comm_we0           ),
     .q0     ( comm2main          ),
     // MCU
     .addr1  ( mcu_bus[9:0]       ),

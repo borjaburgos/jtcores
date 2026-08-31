@@ -1,6 +1,7 @@
 bubl:
   - get:
     - jtbubl_game.v
+    - jtbubl_link2p_ram_clear.v
     - jtbubl_main.v
     - jtbubl_colmix.v
     - jtbubl_video.v
