@@ -587,3 +587,17 @@ physical run on 2026-08-29.
 - The previous role pair remains the latest physical PASS. Install and smoke
   test these refreshed images on both Pockets before treating them as the
   hardware-validated release candidate.
+
+### Refreshed card installation
+
+- Black 32 GB UUID `0403-0201` received normal Host RBF
+  `4f5d3b42b8fdbb3781975994a9ab4a9dad7c961c154199321b727469431ec78b`.
+- White 32 GB UUID `D9C0-15E7` received normal Join RBF
+  `6a0bae65cf2563cec806382237cb8bce901f129214556b429c2a8b6c7021a456`.
+- Both RBFs and both external ROM copies passed read-back SHA-256 verification;
+  the 64 GB card remained excluded. Both filesystems were synchronized and
+  safely unmounted.
+- The black Pocket USB SD device reported writable while its automatic mount
+  was read-only. A UUID-addressed UDisks remount with `rw,flush` restored write
+  access without `sudo`; the repeatable workaround is recorded in `BUILD.md`.
+- Final refreshed-build gameplay and disconnect/restart smoke test: pending.

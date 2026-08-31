@@ -124,6 +124,22 @@ read-only even when the host mount is writable. An `EROFS` result from that
 workspace boundary does not by itself prove that the card or FAT filesystem is
 faulty; retry the reviewed installer with explicit removable-media access.
 
+If the USB mass-storage device itself reports writable (`RO=0`) but the desktop
+automounter selected `ro`, remount the verified filesystem UUID through UDisks
+without changing device names or requiring a root shell:
+
+```bash
+lsblk -o NAME,SIZE,RO,FSTYPE,UUID,MOUNTPOINTS,MODEL
+udisksctl unmount -b /dev/disk/by-uuid/EXPECTED-UUID
+udisksctl mount -b /dev/disk/by-uuid/EXPECTED-UUID -o rw,flush
+findmnt -no SOURCE,TARGET,FSTYPE,OPTIONS /run/media/$USER/MOUNT_NAME
+```
+
+Proceed only when the final options contain `rw` and the UUID is still the
+intended card. This recovered the Pocket USB SD Access mount without `sudo` on
+2026-08-31. If UDisks still mounts it read-only, stop and perform the FAT check
+below rather than forcing writes.
+
 If a card was disconnected without a clean eject and the host itself mounts it
 read-only, unmount it and check the correct partition directly:
 

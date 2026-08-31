@@ -452,3 +452,20 @@ Diagnostic Join RBF SHA-256: 96a10c992d3e7492694dcbf92bd7cb0681a9b5a6f66ac27885f
 The prior normal Host/Join revision remains the latest physical gameplay and
 disconnect/restart PASS. These reviewed bitstreams require one final two-Pocket
 smoke test after installation; no new live-game reconnection claim is made.
+
+### Refreshed SD installation, 2026-08-31
+
+The reviewed normal roles were installed on the same backed-up 32 GB cards:
+
+```text
+Black UUID 0403-0201: normal Host, read-back SHA-256 PASS
+White UUID D9C0-15E7: normal Join, read-back SHA-256 PASS
+Canonical external ROM on both cards: read-back SHA-256 PASS
+64 GB card: excluded
+```
+
+The black card's device was writable but its automatic filesystem mount was
+read-only. A UUID-addressed UDisks unmount/remount with `rw,flush` restored
+write access without `sudo`; the same procedure is now documented in the build
+guide. Both cards were synchronized and safely unmounted after verification.
+The refreshed pair is ready for its final physical smoke test.
