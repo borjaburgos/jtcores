@@ -454,7 +454,7 @@ def main() -> int:
 
         (temp_root / "simulation" / "unit").mkdir(parents=True)
         (temp_root / "simulation" / "unit" / "RESULT.txt").write_text(
-            "Run `make link2p-unit` from the source tree; all five ROM-free testbenches must pass.\n",
+            "Run `make link2p-unit` from the source tree; all six ROM-free testbenches must pass.\n",
             encoding="utf-8",
         )
         determinism = None
