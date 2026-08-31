@@ -45,8 +45,10 @@ different core/platform IDs from both normal Link2P roles and stock JTBUBL.
 10. Play at least three levels and leave a longer attract/gameplay run while
     observing frame/CRC diagnostics.
 11. Remove the cable during gameplay and confirm both stop/reset safely.
-12. Reconnect, establish a fresh session, swap physical Host/Join units, and
-    repeat a shorter run.
+12. Reconnect, exit both normal cores, launch Join followed by Host, and
+    confirm a clean fresh game. Automatic in-place gameplay recovery is not a
+    POC requirement and is not supported by the validated build.
+13. Swap physical Host/Join units and repeat a shorter run.
 
 ## Failure evidence
 

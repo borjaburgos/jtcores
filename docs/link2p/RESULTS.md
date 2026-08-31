@@ -332,4 +332,36 @@ The combined ROM-free private bundle is preserved at
 `<PRIVATE_ARTIFACT_ROOT>/JTBUBL-Link2P/257a4c5`; all 127 entries in its
 `SHA256SUMS` pass. Both normal roles and their canonical ROM were installed
 and read-back hash verified on 32 GB SD UUIDs `D9C0-15E7` and `0403-0201`;
-the 64 GB card remained excluded. Linked gameplay remains pending.
+the 64 GB card remained excluded.
+
+### First linked gameplay run, 2026-08-30
+
+The white Pocket ran Join/P2 and the black Pocket ran Host/P1. Both displayed
+the complete local Bubble Bobble game, accepted credits through Select, and
+entered linked two-player gameplay through at least the Level 1 to Level 2
+transition. The user reported continued synchronized gameplay after that
+transition. Exiting and cleanly relaunching Join followed by Host also restored
+a playable linked session.
+
+```text
+Complete local game video on both Pockets: PASS
+Credits and Start: PASS on a clean session
+Linked two-player gameplay: PASS through at least Level 2
+Level transition: PASS
+Cable removal safe reset/debug screen: PASS
+Seamless live-game reconnect: unsupported POC non-goal
+```
+
+Removing the cable during gameplay safely selected the diagnostic screen.
+Reconnecting returned both cores to the NOTICE screen, but the automatically
+recovered game instance could not start: credits accumulated, then Start
+returned to NOTICE. Exiting both cores and launching Join followed by Host
+restored normal gameplay. The supported POC recovery procedure after any
+cable loss is therefore to reconnect the cable and relaunch both roles.
+
+The protocol regression now phases the two game-frame inputs independently
+and verifies neutral, Coin, and Start after a staggered-contact reconnect and
+game reset. All five unit tests pass. This shows that the abstract link/input
+pipeline recovers; it does not model JTBUBL's complete mid-game reset state.
+The exact game-level reinitialization cause remains unresolved, but seamless
+reconnection during a live game is an explicit non-goal for this POC.

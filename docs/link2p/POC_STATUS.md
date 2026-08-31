@@ -508,4 +508,24 @@ physical run on 2026-08-29.
 - Combined private bundle `257a4c5` passes all 127 recorded SHA-256 checks.
   Both normal roles and their canonical ROM were installed and read-back hash
   verified on 32 GB SD UUIDs `D9C0-15E7` and `0403-0201`; the 64 GB card
-  remained out of scope. Linked gameplay remains pending.
+  remained out of scope.
+
+## 2026-08-30 — linked gameplay pass and recovery limitation
+
+- White Pocket ran Join/P2 and black Pocket ran Host/P1. Both displayed the
+  complete game locally, accepted Select credits and Start, and ran linked
+  two-player gameplay through at least the Level 1 to Level 2 transition.
+- Cable removal during gameplay safely selected the diagnostic/reset screen.
+  Reconnect returned both cores to NOTICE, but credits plus Start returned to
+  NOTICE instead of starting a game. Exiting both cores and relaunching Join
+  followed by Host restored normal linked gameplay.
+- Supported recovery after cable loss is reconnect, exit both cores, launch
+  Join, then launch Host. Seamless live-game reconnection is an explicit POC
+  non-goal.
+- The protocol regression now uses independently phased Host/Join game-frame
+  inputs and verifies neutral, Coin, and Start after staggered reconnect plus
+  game reset. All five unit tests pass; the remaining limitation is beyond
+  the modeled packet/input pipeline and is recorded without claiming an exact
+  JTBUBL internal cause.
+- Core POC gameplay mission: PASS. Physical role swap and a longer gameplay
+  soak remain useful final validation.

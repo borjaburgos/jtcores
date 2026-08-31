@@ -31,6 +31,15 @@
 
 Record the first logical frame and both fingerprints. Check, in order: ROM/DIP/build identity, reset release diagnostics, input frame/sequence, packet CRC/stale counters, uninitialized RAM, then MCU-visible state. Do not modify JTBUBL before target-level causes are disproven.
 
+## NOTICE loop after a gameplay cable reconnect
+
+Cable removal intentionally stops both games and selects the diagnostic
+screen. Although the transport can negotiate another session after reconnect,
+the validated normal build does not produce a usable in-place JTBUBL restart:
+credits accumulate, but Start returns to NOTICE. Reconnect the cable, exit both
+cores, launch Join first, then launch Host. A clean relaunch restores linked
+gameplay. Seamless live-game reconnection is outside the POC scope.
+
 ## Quartus failures
 
 Use `jotego/jtcore20`, read the first meaningful error in the generated `jtcore.log` and Quartus reports, and compare new warnings against the stock baseline in `RESULTS.md`. Link-clock paths must not be left unconstrained or waived without a documented CDC reason.
