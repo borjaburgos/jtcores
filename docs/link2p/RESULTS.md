@@ -515,6 +515,20 @@ Diagnostic Join RBF SHA-256: 5f652039832d55c444f8b29198e1969943c2a0744e38043c589
 All roles use 348,587 memory bits, 70 RAM blocks, 26 DSP blocks, and four
 PLLs. ROM-free private bundle `efaa8d2` passes all 127 entries in
 `SHA256SUMS`; its manifest records the 250,000 Hz cable clock and contains no
-ROM. No SD card was connected after the build. Installation and a two-cable
-diagnostic/gameplay stability soak remain pending, so no hardware robustness
-claim is made for this candidate yet.
+ROM.
+
+Normal and diagnostic Host/Join packages were then installed on both backed-up
+32 GB cards, UUIDs `D9C0-15E7` and `0403-0201`; the 64 GB card remained
+excluded. All four RBFs and all four external-ROM copies on each card passed
+read-back SHA-256 verification. Every installed role manifest reports build
+`0x4c325002`, a 250,000 Hz serial clock, protocol version 1, and source
+`efaa8d2`. Both cards were synchronized and safely unmounted.
+
+During installation the protected command environment displayed both card
+mounts as read-only, while host-level `findmnt` reported the same mounts as
+read-write and both block devices reported `RO=0`. Installation with explicit
+removable-media access succeeded; this was an execution-sandbox boundary, not
+evidence of FAT damage, and no repair or reformat was performed.
+
+A two-cable diagnostic/gameplay stability soak remains pending, so no hardware
+robustness claim is made for this candidate yet.

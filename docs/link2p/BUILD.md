@@ -122,7 +122,12 @@ explicit removable-drive/write authorization the execution environment
 requires. In particular, a protected workspace may present `/run/media` as
 read-only even when the host mount is writable. An `EROFS` result from that
 workspace boundary does not by itself prove that the card or FAT filesystem is
-faulty; retry the reviewed installer with explicit removable-media access.
+faulty. Check the mount from the host context before remounting, repairing, or
+reformatting the card. If the host reports `rw`, leave the filesystem alone and
+run the reviewed installer with explicit removable-media access. This exact
+split view was observed on both Pocket USB SD Access devices on 2026-08-31:
+the protected workspace reported `ro`, while host-level `findmnt` reported
+`rw` and the installations passed full read-back verification.
 
 If the USB mass-storage device itself reports writable (`RO=0`) but the desktop
 automounter selected `ro`, remount the verified filesystem UUID through UDisks

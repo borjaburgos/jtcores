@@ -617,6 +617,15 @@ physical run on 2026-08-29.
   `cba779bec51cbd47477c1452277d6096d220251a` produce four passing seed-0
   builds. Normal Host/Join worst slack is +0.118/+0.122 ns; diagnostic
   Host/Join worst slack is +0.084/+0.126 ns.
-- ROM-free bundle `efaa8d2` passes all 127 SHA-256 checks. No card was
-  connected after packaging. Diagnostic and gameplay stability tests with
-  both cables remain required before the 250 kHz candidate can pass hardware.
+- ROM-free bundle `efaa8d2` passes all 127 SHA-256 checks. Normal and
+  diagnostic Host/Join packages were installed on both 32 GB cards. All four
+  RBFs and all four external-ROM copies per card passed read-back SHA-256;
+  every installed manifest reports build `0x4c325002` at 250,000 Hz. Both
+  cards were synchronized and safely unmounted. Diagnostic and gameplay
+  stability tests with both cables remain required before the 250 kHz
+  candidate can pass hardware.
+- The protected command environment showed both `/run/media` mountpoints as
+  read-only even though host-level `findmnt` showed them read-write and both
+  block devices reported `RO=0`. This was a sandbox view, not FAT damage; no
+  repair or reformat was necessary. `BUILD.md` now requires checking the host
+  mount before taking filesystem recovery action.
