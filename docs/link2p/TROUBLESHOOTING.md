@@ -27,6 +27,18 @@
 - Check target logical frame, sequence, and both buffered player samples.
 - Never bypass the frame buffer for local input.
 
+## Frequent involuntary resets
+
+- Confirm both role manifests report build ID `0x4c325002` and
+  `serial_clock_hz` 250000. Do not mix either role with a 1 MHz build.
+- Run the always-visible diagnostic pair and record CRC-error and timeout
+  counter deltas separately for each cable and physical Host/Join assignment.
+- Compare the same two Pockets and cable with a known-good linked GB/GBC title.
+  A failure there points to the physical cable/connector path; a stable stock
+  link with failing Link2P diagnostics points back to the custom transport.
+- A spontaneous reset is a failed stability test even if automatic restart
+  succeeds. Do not treat clean recovery as evidence that the link is robust.
+
 ## DESYNC
 
 Record the first logical frame and both fingerprints. Check, in order: ROM/DIP/build identity, reset release diagnostics, input frame/sequence, packet CRC/stale counters, uninitialized RAM, then MCU-visible state. Do not modify JTBUBL before target-level causes are disproven.

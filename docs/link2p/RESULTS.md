@@ -469,3 +469,52 @@ read-only. A UUID-addressed UDisks unmount/remount with `rw,flush` restored
 write access without `sudo`; the same procedure is now documented in the build
 guide. Both cards were synchronized and safely unmounted after verification.
 The refreshed pair is ready for its final physical smoke test.
+
+### Family playtest exposed transport instability, 2026-08-31
+
+A normal household playtest of the reviewed 1 MHz pair produced repeated
+involuntary cable-loss resets. The failure rate made sustained gameplay
+impractical. The behavior occurred with both the Analogue Pocket Link Cable
+and a ModRetro GB/GBC-compatible cable, so replacing the cable alone did not
+resolve it.
+
+This supersedes the earlier short physical passes only as evidence of link
+robustness. Startup, synchronized controls, clean cable-loss reset, and
+automatic cold restart were demonstrated, but the 1 MHz transport is not a
+viable release candidate. The test did not isolate connector mechanics from
+electrical timing or signal integrity.
+
+### 250 kHz cable-rate candidate, 2026-08-31
+
+The Host cable clock was reduced from 1 MHz to 250 kHz. The inter-slot low
+interval and Join framing detector were scaled by the same factor, preserving
+their relationship to the SCK half-bit interval. A 192-bit packet plus framing
+takes 784 microseconds, leaving more than twenty complete slots per 59.19 Hz
+game frame. Protocol build ID `0x4c325002` prevents the 250 kHz roles from
+silently pairing with the previous images.
+
+The serial regression now exercises the production divider and framing
+defaults. All six ROM-free tests pass, as do Host and Join Pocket lint. The
+remaining Analogizer missing-pin warnings are inherited and unchanged.
+
+The candidate builds use JTCORES commit
+`efaa8d2ad5d7695400b5021f30930acdbad8cb7f` and Pocket target commit
+`cba779bec51cbd47477c1452277d6096d220251a`:
+
+```text
+Normal Host seed 0: PASS, +0.118 ns, 9,675 ALMs / 9,744 registers
+Normal Host RBF SHA-256: 03fc0edf0f6082e3f31901968c3638a4eaae7679ee1f0fdbeef104ddec026fd3
+Normal Join seed 0: PASS, +0.122 ns, 9,651 ALMs / 9,706 registers
+Normal Join RBF SHA-256: bbb0bf74c7cb53c00b9de7665e9afba390b9ea6232c9e9b590cb78f38abf947b
+Diagnostic Host seed 0: PASS, +0.084 ns, 9,667 ALMs / 9,718 registers
+Diagnostic Host RBF SHA-256: 6abf8606119af6869b0470b635905d4b01793aa2c4470e895c87946869c3de77
+Diagnostic Join seed 0: PASS, +0.126 ns, 9,645 ALMs / 9,655 registers
+Diagnostic Join RBF SHA-256: 5f652039832d55c444f8b29198e1969943c2a0744e38043c58962e19273f3ea6
+```
+
+All roles use 348,587 memory bits, 70 RAM blocks, 26 DSP blocks, and four
+PLLs. ROM-free private bundle `efaa8d2` passes all 127 entries in
+`SHA256SUMS`; its manifest records the 250,000 Hz cable clock and contains no
+ROM. No SD card was connected after the build. Installation and a two-cable
+diagnostic/gameplay stability soak remain pending, so no hardware robustness
+claim is made for this candidate yet.

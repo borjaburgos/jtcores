@@ -33,23 +33,27 @@ different core/platform IDs from both normal Link2P roles and stock JTBUBL.
 4. Confirm both remain waiting/reset until the peer is ready, then both leave
    reset. Exercise each local control and verify the corresponding diagnostic
    bits and clean CRC/timeout counters.
-5. Disconnect/reconnect once, verify a clean fresh diagnostic session, then
+5. With both units handled as they would be during play, run the diagnostic
+   pair for at least 15 minutes with each available cable. Record starting and
+   ending CRC-error and timeout rows. Any spontaneous session reset fails the
+   transport gate; preserve the counter deltas and cable identity.
+6. Disconnect/reconnect once, verify a clean fresh diagnostic session, then
    install both normal roles on each card with `--mode normal`.
-6. Launch normal Join/P2, then normal Host/P1 and compare attract mode.
-7. Press Select to insert P1 credits on Host and P2 credits on Join, then press
+7. Launch normal Join/P2, then normal Host/P1 and compare attract mode.
+8. Press Select to insert P1 credits on Host and P2 credits on Join, then press
    Start as needed to enter real two-player gameplay.
-8. Confirm Host controls only P1, Join controls only P2, and both screens show
+9. Confirm Host controls only P1, Join controls only P2, and both screens show
    the complete identical game.
-9. Exercise simultaneous movement/actions, death/respawn, level transitions,
+10. Exercise simultaneous movement/actions, death/respawn, level transitions,
    bonus appearance/pickup, scores, and lives.
-10. Play at least three levels and leave a longer attract/gameplay run while
+11. Play at least three levels and leave a longer attract/gameplay run while
     observing frame/CRC diagnostics.
-11. Remove the cable during gameplay and confirm both stop/reset safely.
-12. Reconnect without exiting either core and confirm both return to a clean
+12. Remove the cable during gameplay and confirm both stop/reset safely.
+13. Reconnect without exiting either core and confirm both return to a clean
     NOTICE screen. Insert credits with Select and press Start; a new linked
     game must start normally. The interrupted game's progress is intentionally
     discarded; preserving or resuming live gameplay is not a POC requirement.
-13. Swap physical Host/Join units and repeat a shorter run.
+14. Swap physical Host/Join units and repeat a shorter run.
 
 ## Failure evidence
 

@@ -601,3 +601,22 @@ physical run on 2026-08-29.
   was read-only. A UUID-addressed UDisks remount with `rw,flush` restored write
   access without `sudo`; the repeatable workaround is recorded in `BUILD.md`.
 - Final refreshed-build gameplay and disconnect/restart smoke test: pending.
+
+## 2026-08-31 — family playtest failure and 250 kHz candidate
+
+- The reviewed 1 MHz pair reset repeatedly during an ordinary family
+  playtest. Both the Analogue and ModRetro cables exhibited the behavior;
+  sustained gameplay was not practical. Earlier short functional tests are
+  no longer considered sufficient evidence of transport robustness.
+- The cable clock is now 250 kHz with proportionally scaled framing intervals.
+  Packet capacity remains above twenty complete transfers per game frame.
+  Build ID `0x4c325002` distinguishes the revised roles.
+- The serial test uses the production timing defaults. All six ROM-free tests
+  and both Pocket role lints pass.
+- JTCORES `efaa8d2ad5d7695400b5021f30930acdbad8cb7f` and Pocket
+  `cba779bec51cbd47477c1452277d6096d220251a` produce four passing seed-0
+  builds. Normal Host/Join worst slack is +0.118/+0.122 ns; diagnostic
+  Host/Join worst slack is +0.084/+0.126 ns.
+- ROM-free bundle `efaa8d2` passes all 127 SHA-256 checks. No card was
+  connected after packaging. Diagnostic and gameplay stability tests with
+  both cables remain required before the 250 kHz candidate can pass hardware.
