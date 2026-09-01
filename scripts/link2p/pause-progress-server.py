@@ -32,6 +32,18 @@ def read_key_values(path: Path) -> dict[str, str]:
     return values
 
 
+def read_line_value(path: Path, key: str) -> str:
+    prefix = f"{key}="
+    try:
+        lines = path.read_text(errors="replace").splitlines()
+    except FileNotFoundError:
+        return ""
+    for line in lines:
+        if line.startswith(prefix):
+            return line.removeprefix(prefix).strip()
+    return ""
+
+
 def integer(value: str | None, default: int = 0) -> int:
     try:
         return int(value or default)
@@ -63,7 +75,11 @@ class ProgressModel:
 
         plan = read_key_values(run / "plan.txt")
         requested = integer(plan.get("requested_frames"))
-        case_names = [name for name in plan.get("cases", "").split() if CASE_NAME.fullmatch(name)]
+        case_names = [
+            name
+            for name in read_line_value(run / "plan.txt", "cases").split()
+            if CASE_NAME.fullmatch(name)
+        ]
         cases: list[dict[str, object]] = []
         newest_mtime = (run / "plan.txt").stat().st_mtime
 
@@ -149,7 +165,7 @@ class ProgressModel:
         if run is None or not CASE_NAME.fullmatch(case_name) or side not in {"a", "b"}:
             return None
         plan = read_key_values(run / "plan.txt")
-        if case_name not in plan.get("cases", "").split():
+        if case_name not in read_line_value(run / "plan.txt", "cases").split():
             return None
         path = run / case_name / "frames" / f"latest-{side}.ppm"
         try:
