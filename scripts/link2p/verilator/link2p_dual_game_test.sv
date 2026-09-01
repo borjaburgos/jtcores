@@ -70,6 +70,8 @@ module game_test(
     input           tilt,
     input           dip_test,
     input           dip_pause,
+    input           link2p_run_a,
+    input           link2p_run_b,
 `ifdef JTFRAME_OSD_FLIP
     input           dip_flip,
 `else
@@ -114,16 +116,24 @@ wire [1:0] SDRAM_DQM_b, SDRAM_BA_b;
 wire SDRAM_nWE_b, SDRAM_nCAS_b, SDRAM_nRAS_b, SDRAM_nCS_b;
 wire SDRAM_CLK_b, SDRAM_CKE_b;
 wire [7:0] st_dout_b, debug_view_b;
+wire dip_pause_a = dip_pause & link2p_run_a;
+wire dip_pause_b = dip_pause & link2p_run_b;
 `ifndef JTFRAME_OSD_FLIP
 wire dip_flip_b;
 `endif
 
 // A and B receive the same ROM download, DIP values, reset, and cabinet input.
-// Each instance owns its own SDRAM model and all writable game state.
-game_test_single u_a (.*);
+// Each instance owns its own SDRAM model and all writable game state. The
+// simulation-only run inputs permit a staggered pause experiment without
+// changing JTBUBL or the production Pocket target.
+game_test_single u_a (
+    .*,
+    .dip_pause  ( dip_pause_a )
+);
 
 game_test_single u_b (
     .*,
+    .dip_pause  ( dip_pause_b ),
     .pxl2_cen   ( pxl2_cen_b   ),
     .pxl_cen    ( pxl_cen_b    ),
     .red        ( red_b        ),

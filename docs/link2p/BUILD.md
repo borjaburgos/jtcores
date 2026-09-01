@@ -46,6 +46,7 @@ make link2p-diag-join
 make link2p-package ROM=/absolute/path OUT=/absolute/private/path
 make link2p-jtbubl-smoke ROM=/absolute/path/to/bublbobl.rom
 make link2p-jtbubl-long ROM=/absolute/path/to/bublbobl.rom
+make link2p-jtbubl-pause ROM=/absolute/path/to/bublbobl.rom
 ```
 
 `link2p-unit` runs six Icarus testbenches in `jotego/linter`. Host and Join
@@ -72,6 +73,28 @@ starting only after ROM download; it does not disturb the SDRAM loader. A run
 fails on the first video timing, active-pixel, audio-sample, frame-CRC,
 short-stream, or frozen-video error. Set `LINK2P_VERILATOR_THREADS` only to
 tune host parallelism; two workers are the verified default.
+
+The pause target is an exploratory simulation-only gate. After starting and
+exercising a two-player game, it holds instance A for 1, 10, or 60 frames,
+holds instance B for the same interval, allows 120 settling frames, then
+requires 120 consecutive frames of exact video and audio agreement. The
+staggered schedule tests whether JTBUBL's existing pause input really retains
+enough state to rejoin; pausing both instances together would not answer that
+question. The target does not change Pocket RTL and a pass is observable-state
+evidence, not proof that every hidden state element is identical.
+
+Track the newest pause run from a local browser with:
+
+```bash
+python3 scripts/link2p/pause-progress-server.py \
+  --artifact-root "$PRIVATE_ARTIFACT_ROOT/JTBUBL-Link2P/simulation/determinism" \
+  --bind 0.0.0.0 --port 8766
+```
+
+The read-only dashboard exposes sanitized progress and the two latest PPM
+previews, never the staged ROM or the private artifact tree. Binding to all
+interfaces makes it reachable on trusted LAN and Tailscale addresses; do not
+publish this unauthenticated development server to the public Internet.
 
 Each running pattern atomically refreshes private previews at
 `frames/latest-a.ppm` and `frames/latest-b.ppm` on the first recorded frame and

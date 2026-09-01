@@ -1,0 +1,23 @@
+# Start a two-player game, then remain neutral while the staggered pause test
+# controls each complete JTBUBL instance independently. Keeping cabinet input
+# neutral during the hold avoids mistaking different input schedules for pause
+# state drift.
+720
+2 coin
+6
+2 2coin
+6
+2 coin
+6
+2 2coin
+20
+2 2p
+30
+2 1p
+# Exercise both players, then release every cabinet control for 250 frames
+# before the first default pause point at frame 1300.
+30
+120 right b1 2left 2b2
+120 left b2 2right 2b1
+250
+4000

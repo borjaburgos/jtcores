@@ -3,8 +3,8 @@ set -euo pipefail
 
 mode=${1:-}
 rom=${2:-}
-[[ ${mode} == smoke || ${mode} == long || ${mode} == recovery ]] || {
-    echo "usage: $0 smoke|long|recovery /absolute/path/to/bublbobl.rom" >&2
+[[ ${mode} == smoke || ${mode} == long || ${mode} == recovery || ${mode} == pause ]] || {
+    echo "usage: $0 smoke|long|recovery|pause /absolute/path/to/bublbobl.rom" >&2
     exit 2
 }
 [[ ${rom} == /* && -f ${rom} ]] || {
@@ -66,6 +66,18 @@ case ${mode} in
         runtime_reset_frame=${LINK2P_RUNTIME_RESET_FRAME:-1300}
         runtime_reset_hold_ms=${LINK2P_RUNTIME_RESET_HOLD_MS:-200}
         ;;
+    pause)
+        frames=${LINK2P_PAUSE_FRAMES:-1800}
+        pause_start_frame=${LINK2P_PAUSE_START_FRAME:-1300}
+        pause_settle_frames=${LINK2P_PAUSE_SETTLE_FRAMES:-120}
+        pause_verify_frames=${LINK2P_PAUSE_VERIFY_FRAMES:-120}
+        read -r -a pause_holds <<< "${LINK2P_PAUSE_HOLDS:-1 10 60}"
+        patterns=()
+        for hold in "${pause_holds[@]}"; do
+            patterns+=("hold_${hold}")
+        done
+        reset_delay=
+        ;;
 esac
 [[ ${frames} =~ ^[1-9][0-9]*$ ]] || {
     echo "frame count must be a positive integer" >&2
@@ -81,6 +93,25 @@ if [[ ${mode} == recovery ]]; then
         echo "runtime reset frame must occur before the requested final frame" >&2
         exit 2
     }
+fi
+if [[ ${mode} == pause ]]; then
+    [[ ${pause_start_frame} =~ ^[1-9][0-9]*$ &&
+       ${pause_settle_frames} =~ ^[1-9][0-9]*$ &&
+       ${pause_verify_frames} =~ ^[1-9][0-9]*$ ]] || {
+        echo "pause start, settle, and verification frames must be positive integers" >&2
+        exit 2
+    }
+    for hold in "${pause_holds[@]}"; do
+        [[ ${hold} =~ ^[1-9][0-9]*$ ]] || {
+            echo "pause hold values must be positive integers" >&2
+            exit 2
+        }
+        required_frames=$((pause_start_frame + 2 * hold + pause_settle_frames + pause_verify_frames + 30))
+        (( frames >= required_frames )) || {
+            echo "pause frame count ${frames} is too short for hold ${hold}; need at least ${required_frames}" >&2
+            exit 2
+        }
+    done
 fi
 verilator_threads=${LINK2P_VERILATOR_THREADS:-2}
 [[ ${verilator_threads} =~ ^[1-9][0-9]*$ ]] || {
@@ -104,6 +135,19 @@ python3 "${repo}/scripts/link2p/prepare-jtbubl-dual.py" \
 for pattern in "${patterns[@]}"; do
     mkdir -p "${run_root}/${pattern}"
 done
+
+if [[ ${mode} == pause ]]; then
+    {
+        printf 'mode=pause\n'
+        printf 'jtcores_commit=%s\n' "$(git rev-parse HEAD)"
+        printf 'requested_frames=%s\n' "${frames}"
+        printf 'pause_start_frame=%s\n' "${pause_start_frame}"
+        printf 'pause_settle_frames=%s\n' "${pause_settle_frames}"
+        printf 'pause_verify_frames=%s\n' "${pause_verify_frames}"
+        printf 'pause_holds=%s\n' "${pause_holds[*]}"
+        printf 'cases=%s\n' "${patterns[*]}"
+    } > "${run_root}/plan.txt"
+fi
 
 container_work=/jtcores/cores/bubl/ver/link2p-determinism
 simulation_frames=${frames}
@@ -193,8 +237,21 @@ for pattern in "${patterns[@]}"; do
     printf 'Starting %s input pattern...\n' "${pattern}"
     container_name=link2p-${run_token}-${pattern}
     run_containers+=("${container_name}")
+    input_pattern=${pattern}
+    docker_environment=()
+    if [[ ${mode} == pause ]]; then
+        input_pattern=pause
+        hold=${pattern#hold_}
+        docker_environment=(
+            -e "LINK2P_PAUSE_START_FRAME=${pause_start_frame}"
+            -e "LINK2P_PAUSE_HOLD_FRAMES=${hold}"
+            -e "LINK2P_PAUSE_SETTLE_FRAMES=${pause_settle_frames}"
+            -e "LINK2P_PAUSE_VERIFY_FRAMES=${pause_verify_frames}"
+        )
+    fi
     docker run --rm \
         --name "${container_name}" \
+        "${docker_environment[@]}" \
         -v "${repo}:/jtcores:ro" \
         -v "${run_root}:${container_work}" \
         -w "${container_work}/${pattern}" \
@@ -202,7 +259,7 @@ for pattern in "${patterns[@]}"; do
             set -e
             mkdir frames
             ../obj_dir/sim --inputs "$1" --video-limit -time 1
-        ' link2p-sim "/jtcores/scripts/link2p/verilator/${pattern}.cab" \
+        ' link2p-sim "/jtcores/scripts/link2p/verilator/${input_pattern}.cab" \
         2>&1 | tee "${run_root}/${pattern}/run.log" &
     run_pids+=("$!")
 done
@@ -226,7 +283,6 @@ for pattern in "${patterns[@]}"; do
         echo "missing frame CRC stream for ${pattern}" >&2
         exit 1
     }
-    cmp "${crc_a}" "${crc_b}"
     count_a=$(wc -l < "${crc_a}")
     count_b=$(wc -l < "${crc_b}")
     (( count_a >= frames && count_b >= frames )) || {
@@ -239,9 +295,26 @@ for pattern in "${patterns[@]}"; do
         exit 1
     fi
     stream_sha=$(sha256sum "${crc_a}" | awk '{print $1}')
-    printf '%s frames=%s a=%s b=%s distinct=%s crc_stream_sha256=%s PASS\n' \
-        "${pattern}" "${frames}" "${count_a}" "${count_b}" "${distinct}" "${stream_sha}" \
-        | tee "${run_root}/${pattern}/result.txt"
+    if [[ ${mode} == pause ]]; then
+        pause_result=${run_root}/${pattern}/pause-result.txt
+        [[ -s ${pause_result} ]] || {
+            echo "missing pause result for ${pattern}" >&2
+            exit 1
+        }
+        grep -qx 'result=PASS' "${pause_result}" || {
+            echo "pause convergence failed for ${pattern}" >&2
+            cat "${pause_result}" >&2
+            exit 1
+        }
+        printf '%s frames=%s a=%s b=%s distinct=%s crc_stream_sha256=%s observable_rejoin=PASS\n' \
+            "${pattern}" "${frames}" "${count_a}" "${count_b}" "${distinct}" "${stream_sha}" \
+            | tee "${run_root}/${pattern}/result.txt"
+    else
+        cmp "${crc_a}" "${crc_b}"
+        printf '%s frames=%s a=%s b=%s distinct=%s crc_stream_sha256=%s PASS\n' \
+            "${pattern}" "${frames}" "${count_a}" "${count_b}" "${distinct}" "${stream_sha}" \
+            | tee "${run_root}/${pattern}/result.txt"
+    fi
 done
 
 {
@@ -252,6 +325,10 @@ done
     printf 'post_download_reset_hold_ms=%s\n' "${reset_delay:-0}"
     printf 'runtime_reset_frame=%s\n' "${runtime_reset_frame:-0}"
     printf 'runtime_reset_hold_ms=%s\n' "${runtime_reset_hold_ms:-0}"
+    printf 'pause_start_frame=%s\n' "${pause_start_frame:-0}"
+    printf 'pause_holds=%s\n' "${pause_holds[*]:-}"
+    printf 'pause_settle_frames=%s\n' "${pause_settle_frames:-0}"
+    printf 'pause_verify_frames=%s\n' "${pause_verify_frames:-0}"
     printf 'verilator_threads=%s\n' "${verilator_threads}"
     printf 'rom_size=%s\n' "${rom_size}"
     printf 'rom_crc32=%s\n' "${rom_crc32}"
