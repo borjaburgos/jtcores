@@ -54,8 +54,8 @@ the interrupted game; seamless preservation or resumption of live-game state
 is outside the POC scope.
 
 If Start loops back to NOTICE, first verify corrected normal bitstreams (Host
-SHA-256 `217d1e2f9416817f14b6a0caf5213fbb589523d5d7f4c45386e54c80b35894d6`,
-Join SHA-256 `71d59cd27a47e31095e17acca32776780ecbb8eae07b4d7ad79c9ed8dcacdd6a`).
+SHA-256 `03fc0edf0f6082e3f31901968c3638a4eaae7679ee1f0fdbeef104ddec026fd3`,
+Join SHA-256 `bbb0bf74c7cb53c00b9de7665e9afba390b9ea6232c9e9b590cb78f38abf947b`).
 Exit and relaunch Join followed by Host only as a fallback, and preserve the
 build manifests plus the first visible diagnostic state for investigation.
 

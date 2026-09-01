@@ -110,3 +110,26 @@ gameplay through multiple levels, and automatic recovery after cable removal.
 Recovery intentionally discards the interrupted game, scrubs Link2P-visible
 JTBUBL work RAM, and returns both peers to a clean NOTICE/start flow after
 reconnection. Preserving a live game across a disconnect is outside this POC.
+
+## Freeze-and-resume exploration
+
+The next transport experiment may preserve a live game by holding both local
+instances before a missing input reaches its application frame. This is a
+bounded extension, not a claim that arbitrary divergent state can be repaired.
+The two-frame input delay provides a candidate detection window, but simulation
+must prove the bound for cable loss at every serial bit and frame phase.
+
+The existing JTBUBL `dip_pause` is not sufficient evidence of a deterministic
+freeze: it gates selected VBL-driven behavior and pause video, but it is not a
+global hold for every CPU, MCU, sound, video, RAM, and timer state element. A
+recovery implementation must instead provide a synchronous, frame-boundary
+game-state hold while keeping the Link2P transport, timeout logic, and status
+video alive. It must not gate an FPGA clock combinationally.
+
+On reconnection, peers must exchange at least the retained session identity,
+last committed logical frame, input sequence, and a state fingerprint. Resume
+is allowed only after those values agree and the cable has remained healthy
+for a defined stability window. Any disagreement, expired detection window, or
+repeated cable chatter falls back to the existing clean reset-to-NOTICE path.
+The first validation target is therefore lossless continuation from an agreed
+commit boundary, not rollback or state transfer between divergent instances.

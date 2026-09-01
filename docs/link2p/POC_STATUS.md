@@ -621,9 +621,16 @@ physical run on 2026-08-29.
   diagnostic Host/Join packages were installed on both 32 GB cards. All four
   RBFs and all four external-ROM copies per card passed read-back SHA-256;
   every installed manifest reports build `0x4c325002` at 250,000 Hz. Both
-  cards were synchronized and safely unmounted. Diagnostic and gameplay
-  stability tests with both cables remain required before the 250 kHz
-  candidate can pass hardware.
+  cards were synchronized and safely unmounted.
+- The 250 kHz diagnostic run produced fewer disconnects anecdotally than the
+  1 MHz family playtest, but spontaneous disconnects still occurred often
+  enough to make play frustrating. The candidate therefore fails the hardware
+  transport gate and is not a robust release candidate.
+- A bounded freeze-and-resume experiment is the next proposed direction:
+  retain both game states only if they can stop at the same committed frame,
+  re-handshake and compare state identity, then resume after a stable-link
+  window. Any mismatch falls back to the proven clean reset-to-NOTICE flow.
+  The existing arcade pause input is not assumed to freeze all JTBUBL state.
 - The protected command environment showed both `/run/media` mountpoints as
   read-only even though host-level `findmnt` showed them read-write and both
   block devices reported `RO=0`. This was a sandbox view, not FAT damage; no

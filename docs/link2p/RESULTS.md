@@ -530,5 +530,19 @@ read-write and both block devices reported `RO=0`. Installation with explicit
 removable-media access succeeded; this was an execution-sandbox boundary, not
 evidence of FAT damage, and no repair or reformat was performed.
 
-A two-cable diagnostic/gameplay stability soak remains pending, so no hardware
-robustness claim is made for this candidate yet.
+The subsequent diagnostic run was an anecdotal improvement over the 1 MHz
+family playtest, but spontaneous disconnects still occurred and remained too
+disruptive for normal play. The 250 kHz candidate therefore fails the hardware
+transport gate; lowering SCK improved the symptom but did not make the physical
+link robust enough for release. The Analogue cable linked in GB/C mode as the
+design requires and did not link in GBA mode, confirming the expected crossed
+SO/SI cable topology.
+
+The next proposed experiment is a bounded frame-boundary freeze and recovery,
+not arbitrary state reconstruction. Both replicas would stop before applying a
+missing required sample, keep the transport alive, and resume only after their
+last committed frame, input sequence, session identity, and state fingerprint
+agree through a stable-link window. Any disagreement must retain the current
+clean reset-to-NOTICE behavior. `ARCHITECTURE.md` records the design boundary
+and why the existing JTBUBL pause input cannot yet be treated as a complete
+state freeze.
