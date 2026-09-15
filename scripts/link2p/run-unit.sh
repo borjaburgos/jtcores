@@ -13,10 +13,23 @@ docker run --rm \
          echo "Link2P unit: ${test_name}"
          iverilog -g2012 -Wall -o "/tmp/link2p-${test_name}.vvp" \
              hdl/jtframe_pocket_link_serial.v \
+             hdl/jtframe_link2p.v \
              hdl/jtframe_pocket_link2p.v \
              "ver/link2p_${test_name}_tb.v"
          vvp "/tmp/link2p-${test_name}.vvp"
      done
+
+     for crc_bits in 8 32; do
+         echo "Link2P unit: CRC-${crc_bits} corruption regression"
+         iverilog -g2012 -Wall -s link2p_crc_tb -Plink2p_crc_tb.CRC_BITS=${crc_bits} \
+             -o /tmp/link2p-crc.vvp hdl/jtframe_pocket_link_serial.v ver/link2p_crc_tb.sv
+         vvp /tmp/link2p-crc.vvp
+     done
+
+     echo "Link2P unit: generic session guards"
+     iverilog -g2012 -Wall -s link2p_session_tb -o /tmp/link2p-session.vvp \
+         hdl/jtframe_link2p.v ver/link2p_session_tb.sv
+     vvp /tmp/link2p-session.vvp
 
      echo "Link2P unit: JTBUBL clean restart RAM"
      cd /jtcores

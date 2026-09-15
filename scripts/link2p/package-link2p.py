@@ -49,8 +49,8 @@ ROLE_CONFIG = {
 }
 
 FORBIDDEN_SUFFIXES = {".rom", ".zip", ".7z", ".sof", ".rbf", ".rbf_r"}
-PROTOCOL_VERSION = 1
-BUILD_ID = "0x4c325002"
+PROTOCOL_VERSION = 2
+BUILD_ID = "0x4c325003"
 SERIAL_CLOCK_HZ = 250_000
 INPUT_DELAY_FRAMES = 2
 
@@ -428,6 +428,8 @@ def main() -> int:
 
     super_commit = run_git(repo, "rev-parse", "HEAD")
     pocket_commit = run_git(pocket_repo, "rev-parse", "HEAD")
+    if str(host_source_manifest["pocket_commit"]) != pocket_commit:
+        raise RuntimeError("preserved Pocket builds do not match the protocol source being packaged")
     dirty = bool(run_git(repo, "status", "--porcelain")) or bool(
         run_git(pocket_repo, "status", "--porcelain")
     )
@@ -491,7 +493,7 @@ def main() -> int:
 
         (temp_root / "simulation" / "unit").mkdir(parents=True)
         (temp_root / "simulation" / "unit" / "RESULT.txt").write_text(
-            "Run `make link2p-unit` from the source tree; all six ROM-free testbenches must pass.\n",
+            "Run `make link2p-unit` and `make link2p-tolerance` from the source tree; all eight unit testbenches and the cable-fault sweep must pass.\n",
             encoding="utf-8",
         )
         determinism = None
@@ -556,10 +558,11 @@ def main() -> int:
             "dip_configuration": "runtime dipsw[15:0]; peers must match; Bubble Bobble instance write 0x8300",
             "determinism": determinism,
             "known_limitations": [
-                "Cable loss resets both local games; interrupted gameplay and progress are intentionally discarded.",
-                *( [] if determinism else ["Dual-JTBUBL long-run determinism requires the private ROM."] ),
+                "Short errors are tolerated only before the input deadline; sustained loss resets both games and discards progress.",
+                "Protocol-2 hardware stability and independent-memory gameplay validation remain outstanding.",
+                "The earlier dual-game harness shares A's SDRAM response with B; staggered-pause results are inconclusive.",
                 "Join/Join cannot distinguish a missing clock peer from a disconnected cable and remains safely waiting.",
-                "Reconnect creates a fresh automatic session and clean game restart; live-game state is not preserved or resumed.",
+                "After a fault, reconnect creates a fresh session and clean restart; there is no pause, rollback, or state transfer.",
             ],
         }
         write_json(temp_root / "build-manifest.json", manifest)

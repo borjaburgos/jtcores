@@ -1,5 +1,54 @@
 # Link2P results
 
+## 2026-09-15 — protocol-2 error-tolerance candidate
+
+See [REVIEW-20260915.md](REVIEW-20260915.md) for scope, limitations, and the
+correction to the earlier pause interpretation. Hardware behavior has not yet
+been measured for this candidate.
+
+The 250 kHz protocol now uses CRC-32/MPEG-2, repeats current/previous inputs,
+and labels video fingerprints independently of the input target. Identity is
+protocol 2 / build `0x4c325003`. No JTBUBL gameplay RTL changed.
+
+The real-wire Verilator suite passed at these simulated frame/phase profiles:
+
+| Frame clocks at 48 MHz | Peer phase | Brief outages passed | Inputs checked per peer |
+| --- | --- | --- | --- |
+| 810,948 (~59.19 Hz) | 317 clocks | 23 | 135 frames |
+| 800,000 (60 Hz) | 300,000 clocks | 22 | 130 frames |
+| 960,000 (50 Hz) | 450,000 clocks | 22 | 125 frames |
+
+Each profile also corrupted every one of the 248 packet bits in both
+directions, with clean slots between damaged slots. Both peers detected all
+248 corruptions per profile (1,488 individual endpoint-bit injections total).
+Outages covered 0.1, 1, and 5 ms on both data directions and SCK, an eight-phase
+5 ms sweep, the Join application boundary, and SCK held high. Every applied
+P1/P2 sample—including changing Coin/Start—matched the independent scoreboard.
+Each profile then held all wires disconnected for three frames: both peers
+reset with a missing-input deadline, as required.
+
+In the nearly aligned profile, an 18.89475 ms outage spanning an entire
+original input-transmission window recovered one input from history on each
+peer without reset. The original v1 source, tested with video checking both
+enabled and disabled, passed the initial 0.1/1/5 ms scenarios but failed that
+longer gap with input fault 5. These are specific tested phases, not a promise
+to survive any outage of that duration.
+
+An intermediate 224-bit draft retaining CRC-8 failed a 5 ms outage at phase
+202,737: its damaged packet tail passed CRC and conflicted with an accepted
+input. The exact fixed-vector regression now explicitly confirms that CRC-8
+accepts the corruption and CRC-32 rejects it. This is a reproduced protocol
+weakness, not proof of the physical family-playtest failure's cause.
+
+Full Host/Join integration lint passed with the existing unrelated Analogizer
+missing-pin warnings. Eight unit testbenches pass (checksum regression runs
+at both widths), including 65,542 changing-input frames across frame/sequence
+wrap, stale/conflicting inputs, real video mismatch, invalid-traffic timeout,
+reconnection controls, and the existing JTBUBL RAM-clear test.
+
+Quartus timing, packaged bitstreams, and handled-device gameplay remain
+separate release gates; record them below as they complete.
+
 ## Stock baseline
 
 Status: verified through synthesis; not yet tested on a Pocket in this worktree.

@@ -57,6 +57,7 @@ JTFRAME_LINK2P           | Pocket  | Enables the two-Pocket fixed-slot serial li
 JTFRAME_LINK2P_DIAGNOSTIC| Pocket  | Keeps the Link2P status grid visible for ROM-free cable bring-up; requires JTFRAME_LINK2P
 JTFRAME_LINK2P_HOST      | Pocket  | Builds the Link2P SCK-generating Host/P1 role; requires JTFRAME_LINK2P
 JTFRAME_LINK2P_JOIN      | Pocket  | Builds the Link2P externally-clocked Join/P2 role; requires JTFRAME_LINK2P
+JTFRAME_LINK2P_GAME_ID   | Pocket  | Required 8-bit game compatibility ID for Link2P; configure per core, after deterministic reset/input validation
 JTFRAME_LITE_KEYBOARD    |         | Disables automatic MAME keys mapping
 JTFRAME_LOGO_NOHEX       | Pocket  | Do not display the chip ID on the logo screen
 JTFRAME_DIPBASE          | MiST    | Starting base in status word for MiST dip switches. Do not set in [mist] section of macros.def or the MRA will not be correct

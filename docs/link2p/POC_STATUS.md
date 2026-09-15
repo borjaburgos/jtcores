@@ -1,5 +1,28 @@
 # JTBUBL Link2P POC status
 
+## 2026-09-15 — reusable protocol and brief-error tolerance
+
+Implemented protocol 2 / build `0x4c325003`: stronger packet CRC, repeated
+input history, frame-tagged video checks, persistent fault/recovery counters,
+and a transport-independent session module with per-core identity.
+
+The 48 MHz/250 kHz simulation passed 67 short-outage cases across three
+frame/phase profiles and every packet-bit corruption in both directions.
+An approximately 18.895 ms interruption recovers from input history in the
+nearly aligned case. Sustained loss still resets safely. Eight unit benches
+and Host/Join integration lint pass. This is simulation evidence, not a claim
+that the spontaneous physical resets are fixed.
+
+Review exposed and reproduced a CRC-8 collision under a brief simulated
+outage; the CRC-32 regression rejects it. It also found that the old staggered
+pause harness shares A's SDRAM response with B, making that result
+inconclusive. Pause runs are disabled pending independent memory models.
+
+The [review](REVIEW-20260915.md) records generalization requirements, limitations,
+and release gates; [results](RESULTS.md) record measured fault coverage.
+Next: passing FPGA timing/builds, matched ROM-free packages, then diagnostic
+and real gameplay tests with the two Pockets. No upstream PR or SD formatting.
+
 ## 2026-08-27 — preflight and stock baseline
 
 ### Repositories

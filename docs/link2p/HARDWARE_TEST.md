@@ -23,6 +23,22 @@ CRC errors, and timeouts. Both diagnostic packages still contain a complete
 local JTBUBL core; they only keep the target status video selected. They use
 different core/platform IDs from both normal Link2P roles and stock JTBUBL.
 
+Version 2 additionally preserves the last fault across automatic recovery:
+the four-bit row at y=32–39 is 1 role, 2 identity, 3 peer/session, 4 timeout,
+5 input, or 6 video. Bits are MSB first from the left. The rows at y=184–199
+and y=208–223 show recovered-history inputs and missed input deadlines,
+respectively. Counters saturate and survive session restarts, but not core
+reload. A code-5 reset without a deadline increment points to a conflicting
+input or buffer-window problem. Photograph both units: one may only report
+the other unit's fault (code 3).
+
+Use matching protocol-2/build-`0x4c325003` packages on both Pockets. Before
+testing, record the counters; after each unexpected reset, record them again
+without exiting the core. A rising damaged-packet count with no reset is a
+successful tolerated error, not by itself a failed session. A rising recovered
+count shows that a previous input supplied missing history. Neither establishes
+whether the electrical cause was a cable contact, noise, or another fault.
+
 ## Gameplay sequence
 
 1. Back up both cards. Run the install helper with `--mode diagnostic`,
@@ -49,10 +65,12 @@ different core/platform IDs from both normal Link2P roles and stock JTBUBL.
 11. Play at least three levels and leave a longer attract/gameplay run while
     observing frame/CRC diagnostics.
 12. Remove the cable during gameplay and confirm both stop/reset safely.
-13. Reconnect without exiting either core and confirm both return to a clean
+13. Reconnect after a sustained loss, without exiting either core, and confirm both return to a clean
     NOTICE screen. Insert credits with Select and press Start; a new linked
     game must start normally. The interrupted game's progress is intentionally
-    discarded; preserving or resuming live gameplay is not a POC requirement.
+    discarded. Brief self-recovering interruptions are now expected to be
+    tolerated if inputs arrive before their deadlines; a manual unplug is not
+    an accurate millisecond-duration test and may legitimately cause a reset.
 14. Swap physical Host/Join units and repeat a shorter run.
 
 ## Failure evidence

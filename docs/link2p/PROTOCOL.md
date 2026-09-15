@@ -1,87 +1,121 @@
 # Link2P protocol
 
-## Version 1 goals
+## Version 2
 
-The protocol is intentionally small and point-to-point. It performs compatibility checks, coordinates startup, transports one local player's frame-associated controls in each direction, and exchanges diagnostics.
+Two complete local games exchange frame-associated digital controls, startup
+coordination, and diagnostics. No game state, video, or audio is sent. The
+session module is transport-independent; the Pocket adapter uses a GB/GBC
+cable with Host-generated SCK and full-duplex SO/SI.
 
-Host is the only SCK source. Both endpoints drive SO and sample SI. Bits are transferred most-significant first in fixed-size full-duplex slots. Packets are rejected unless their magic, protocol version, and CRC are valid.
+Version 2 repeats the newest and previous input samples, labels video CRCs by
+their own frame, and uses a stronger packet checksum. It is incompatible with
+version 1; update both endpoints together.
 
-## Packet fields
+## Packet layout
 
-Version 1 is a 192-bit, MSB-first packet:
-
-```text
-[191:176] magic 0x4c32 ("L2")
-[175:168] protocol version 1
-[167]     role (1 Host, 0 Join)
-[166:164] message (WAIT/HELLO/ARMED/GO/RUN/FAULT)
-[163:160] local protocol state
-[159:144] session ID
-[143:136] packet sequence
-[135:120] target logical frame
-[119:108] local active-low joystick/start/coin sample
-[107:92]  DIP tag
-[91:60]   build ID 0x4c325002
-[59:52]   game ID 0x42
-[51:20]   previous completed-frame video CRC-32
-[19:8]    sender logical-frame low bits
-[7:0]     CRC-8
-```
-
-CRC-8 uses polynomial `0x07`, initial value `0x00`, over every packet bit except the transmitted CRC byte.
-
-At the hardware defaults, 48 MHz `clk48` and a half divider of 96 produce a
-250 kHz cable clock. A 192-bit transfer takes 768 microseconds and is followed
-by a 16-microsecond low-SCK framing gap. The framing detector requires eight
-microseconds of low SCK, four times a normal low half-bit interval. Join
-oversamples SCK/SI through explicit synchronizers; Host synchronizes SI.
-Receive CRC is accumulated one bit per sampled edge. Transmit CRC is calculated
-from the packet before a serial slot; both role builds must continue to pass
-Pocket timing analysis.
-
-## Messages and startup
+248 bits, MSB first:
 
 ```text
-WAIT_FOR_PEER -> HELLO -> ARMED -> BOUNDARY -> GO -> PENDING -> RUNNING
-                                                              \-> FAULT
-FAULT -> RECOVER/WAIT -> fresh HELLO session
+[247:232] magic 0x4c32 ("L2")
+[231:224] protocol version 2
+[223]     role (1 Host, 0 Join)
+[222:220] message (WAIT/HELLO/ARMED/GO/RUN/FAULT)
+[219:216] local protocol state
+[215:200] session ID
+[199:192] packet sequence
+[191:176] newest input target frame
+[175:164] newest input (12 active-low bits)
+[163:148] DIP tag
+[147:116] build ID (current candidate: 0x4c325003)
+[115:108] core-defined game ID (JTBUBL: 0x42)
+[107:76]  completed-frame video CRC-32
+[75:64]   sender logical-frame low bits (diagnostic)
+[63:48]   video CRC logical frame
+[47:36]   previous input (target = newest target - 1)
+[35]      previous input valid
+[34]      newest input valid
+[33]      video CRC valid
+[32]      reserved, zero
+[31:0]    packet CRC-32/MPEG-2
 ```
 
-Host creates the session ID and repeatedly advertises HELLO. Join accepts only an opposite role with matching version, build, game, and DIP values, then echoes ARMED with the Host session. Host sends GO; both endpoints arm reset release. Each endpoint removes its link reset hold on the next synchronized Pocket `vblank` edge, allowing the existing JTFRAME reset path to complete.
+Packet CRC uses polynomial `0x04c11db7`, initial value `0xffffffff`, no
+reflection and no final XOR, over bits `[247:32]`. It is distinct from the
+video fingerprint. A CRC is error detection, not authentication or a proof
+against every possible corruption.
 
-During recovery, both roles advertise WAIT before beginning a fresh session.
-Cable contacts may reconnect at different times, so a recovering Join also
-accepts a valid fresh Host HELLO. This prevents a Host that received WAIT
-first from stranding the Join in RECOVER.
+48 MHz `clk48` and a half divider of 96 produce 250 kHz SCK. A transfer takes
+992 microseconds, followed by a 16-microsecond low-SCK framing gap: about 16.8
+slots per 59.19 Hz frame. Join detects a gap after eight microseconds low,
+four normal half-bit intervals. SCK/SI pass through explicit synchronizers.
+Receive CRC accumulates per bit; transmit CRC is calculated before the slot
+snapshot. Both role builds must pass timing analysis.
 
-Packets from another session, duplicate/stale sequences, out-of-window frames,
-bad CRCs, incompatible builds/DIPs, peer faults, or peer timeout cannot update
-game inputs. Duplicate and stale sequence flags latch for diagnostics. A
-four-entry frame-keyed buffer detects overwrite/overflow; entries are cleared
-when consumed. Missing data at its required boundary faults instead of reusing
-the prior sample.
-
-Two Join builds cannot distinguish one another from a disconnected cable because neither drives SCK. They remain safely in WAIT_FOR_PEER and never release reset. Two Host builds can exchange enough data to report a role conflict, but SCK contention is an invalid hardware configuration and must not be used intentionally.
-
-## Inputs
-
-The transmitted local sample is 12 active-low bits:
+## Startup and recovery
 
 ```text
-[9:0] joystick
-[10]  Start
-[11]  Coin
+WAIT -> HELLO -> ARMED -> BOUNDARY -> GO -> PENDING -> RUNNING
+                                                       | fault
+                                                       v
+                         fresh HELLO <- RECOVER <- FAULT
 ```
 
-At frame N, each side samples its local source for target N+2. Both endpoints buffer samples by target frame. At the application VBL, the Host sample becomes final P1 and the Join sample becomes final P2 on both Pockets.
+Host chooses a session ID. Join accepts an opposite role with matching
+version, build, game ID, and DIP tag, then echoes ARMED with that session.
+Host starts GO just after a local diagnostic-video boundary. Both peers arm
+reset release for their next local diagnostic-video boundary and let the
+existing JTFRAME reset path complete. There is no global shared clock or
+claim of arbitrary phase/drift tolerance.
 
-No stale sample is reused. A missing required sample at its application boundary enters LINK_ERROR and reasserts linked-session reset.
+Faulted peers hold game reset, spend a quiet recovery interval advertising
+FAULT, then advertise WAIT. Host starts a new session. A recovering Join also
+accepts a fresh compatible HELLO, so contacts reconnecting at different times
+do not strand it in RECOVER. Long interruptions discard game progress and
+retain the clean reset-to-NOTICE behavior.
 
-## Diagnostics
+Two Join builds safely wait without SCK. Two Host builds are an invalid
+electrical configuration; do not deliberately connect two SCK drivers.
 
-Each packet includes the sender's logical frame, sequence, status, and previous completed-frame video CRC. The first incompatible fingerprint for the same logical frame latches DESYNC. Recovery always creates a fresh session and starts both game instances from reset.
+## Input deadline and retransmission
 
-Named, preserved target nets expose link enable, configured role, peer presence,
-session establishment, session ID, TX/RX sequence, last valid frame, CRC error,
-stale/duplicate packet, role conflict, timeout, buffer overflow, desync, CRC
-error count, and timeout count for the status grid or SignalTap.
+The sample is `{Coin, Start, joystick[9:0]}`, all active low. At logical frame
+N each peer captures its local controls for target N+2. The four-slot buffer
+is keyed by the full 16-bit target frame. At the application boundary, both
+games receive the Host sample as P1 and the Join sample as P2. The initial two
+frames use neutral input; no uncaptured sample is advertised as valid.
+
+Every RUN packet repeats the newest capture and, once available, its
+predecessor. Losing the original one-frame transmission window no longer
+necessarily loses that input: history can still arrive before its deadline.
+Retransmissions are idempotent. Consumed history is discarded; conflicting
+values for an outstanding frame, a future target outside the buffer window,
+or an alias of another pending frame fault the session. Sequence arithmetic
+and frame arithmetic are modular; tests cover their wrap boundaries.
+
+Bad-checksum packets are discarded. They neither update inputs nor keep a
+dead peer alive. Duplicate/stale sequences cannot update inputs. There is no
+per-input ACK, prediction, stale-input substitution, pause, or rollback.
+If either required sample is absent at its application boundary, reset is
+asserted. Therefore tolerance is bounded by input timing, peer phase, and
+time to receive a complete clean packet—not a universal disconnect duration.
+
+## Video check and diagnostics
+
+The session captures a stable synchronized video CRC eight `clk48` cycles
+after the game blanking marker. Its tag names that completed logical frame,
+independently of the input target. After five warm-up frames, only matching
+CRC frame tags authorize comparison. A genuine same-frame mismatch faults;
+different-frame fingerprints are not compared. CRC agreement checks visible
+output, not all hidden game state.
+
+Preserved target nets expose enable, role, peer/session status, session ID,
+TX/RX sequence, last valid input frame, CRC/stale/duplicate flags, role
+conflict, timeout, overflow, and video desync. Saturating 16-bit counters
+record damaged slots, timeouts, inputs recovered from history, and missed
+input deadlines. `last_fault_code` survives automatic reconnection, unlike
+the current fault band. These clear on FPGA/PLL reset, not a session restart.
+
+Fault codes: 1 role, 2 identity, 3 peer/session, 4 peer timeout, 5 input, 6 video.
+For code 5, an increased deadline counter distinguishes missing input from
+conflicting input or a buffer-window violation. The peer may report code 3
+after receiving the originating side's fault; record both screens.

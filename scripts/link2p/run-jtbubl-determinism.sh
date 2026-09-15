@@ -3,6 +3,11 @@ set -euo pipefail
 
 mode=${1:-}
 rom=${2:-}
+if [[ ${mode} == pause ]]; then
+    echo "Pause experiment disabled: the dual harness shares A's SDRAM read-data pins with B." >&2
+    echo "Independent memory models are required before staggered execution is valid; see docs/link2p/REVIEW-20260915.md." >&2
+    exit 2
+fi
 [[ ${mode} == smoke || ${mode} == long || ${mode} == recovery || ${mode} == pause ]] || {
     echo "usage: $0 smoke|long|recovery|pause /absolute/path/to/bublbobl.rom" >&2
     exit 2

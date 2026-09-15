@@ -38,6 +38,7 @@ The stock ROM-free Pocket output is under `release/pocket/raw`. A ROM is require
 ```bash
 make link2p-lint
 make link2p-unit
+make link2p-tolerance
 make link2p-link-sim
 make link2p-host
 make link2p-join
@@ -49,7 +50,12 @@ make link2p-jtbubl-long ROM=/absolute/path/to/bublbobl.rom
 make link2p-jtbubl-pause ROM=/absolute/path/to/bublbobl.rom
 ```
 
-`link2p-unit` runs six Icarus testbenches in `jotego/linter`. Host and Join
+`link2p-unit` runs eight Icarus testbenches in `jotego/linter`, including
+the checksum regression at both CRC widths.
+`link2p-tolerance` uses Verilator and the real serial RTL at 48 MHz/250 kHz,
+with synthetic game frames and changing inputs. It sweeps packet bit errors,
+wire outages, and frame phase at 50, 60, and approximately 59.19 Hz. It requires
+no ROM and is not a gameplay simulation. Host and Join
 build targets pass mutually exclusive compile-time macros and a common
 protocol/build ID to Quartus, try up to four seeds, and preserve the passing
 raw package and the reports for its matching seed below
@@ -74,10 +80,15 @@ fails on the first video timing, active-pixel, audio-sample, frame-CRC,
 short-stream, or frozen-video error. Set `LINK2P_VERILATOR_THREADS` only to
 tune host parallelism; two workers are the verified default.
 
-The pause target is an exploratory simulation-only gate. After starting and
-exercising a two-player game, it holds instance A for 1, 10, or 60 frames,
-holds instance B for the same interval, allows 120 settling frames, then
-requires 120 consecutive frames of exact video and audio agreement. The
+The pause target is currently disabled: instance B shares instance A's SDRAM
+response, invalidating the deliberately staggered execution experiment.
+Independent SDRAM models are required before rerunning it. The September 1
+result is inconclusive; see [REVIEW-20260915.md](REVIEW-20260915.md).
+
+The retained exploratory test, once repaired, is intended to start and
+exercise a two-player game, hold instance A for 1, 10, or 60 frames,
+hold instance B for the same interval, allow 120 settling frames, then
+require 120 consecutive frames of exact video and audio agreement. The
 staggered schedule tests whether JTBUBL's existing pause input really retains
 enough state to rejoin; pausing both instances together would not answer that
 question. The target does not change Pocket RTL and a pass is observable-state
@@ -106,7 +117,9 @@ screenshots remain under `PRIVATE_ARTIFACT_ROOT` and are not packaged.
 The package target refuses a dirty source tree; a ROM, output, or preserved
 build path inside the Git worktree; a non-absolute ROM or output path; a
 role/mode mismatch; or mixed JTCORES/Pocket source commits across the four
-preserved builds. It hashes the ROM but does not copy it into the generated
+preserved builds. The preserved Pocket commit must also equal the currently
+pinned Pocket commit, preventing old bitstreams from acquiring new protocol
+metadata. It hashes the ROM but does not copy it into the generated
 bundle. The bundle is named after the bitstream source commit and contains four
 unique, coexistable packages: normal Host and Join, plus always-visible
 diagnostic Host and Join.

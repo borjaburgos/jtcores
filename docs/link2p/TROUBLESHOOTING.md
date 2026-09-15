@@ -29,8 +29,9 @@
 
 ## Frequent involuntary resets
 
-- Confirm both role manifests report build ID `0x4c325002` and
-  `serial_clock_hz` 250000. Do not mix either role with a 1 MHz build.
+- Confirm both role manifests report protocol version 2, build ID
+  `0x4c325003`, and `serial_clock_hz` 250000. Do not mix them with the older
+  protocol-1/250 kHz or 1 MHz packages.
 - Run the always-visible diagnostic pair and record CRC-error and timeout
   counter deltas separately for each cable and physical Host/Join assignment.
 - Compare the same two Pockets and cable with a known-good linked GB/GBC title.
