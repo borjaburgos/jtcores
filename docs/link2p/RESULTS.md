@@ -59,6 +59,34 @@ the session test also independently checks each published packet's CRC.
 The accelerated protocol benches now use a 64-clock inter-slot gap, satisfying
 the publisher's explicit freshness bound; production remains at 768 clocks.
 
+### FPGA candidate
+
+All four builds passed on seed 0 from JTCORES
+`49991dad641fbf145b1cbf4f115b0f420e5e1e54` and Pocket
+`d31d180741e6bc8ef0b1cf505dbf812c300bbe96`:
+
+| Variant | Worst setup | Worst hold |
+| --- | --- | --- |
+| Normal Host | +3.498 ns | +0.128 ns |
+| Normal Join | +3.773 ns | +0.122 ns |
+| Diagnostic Host | +4.033 ns | +0.120 ns |
+| Diagnostic Join | +3.465 ns | +0.122 ns |
+
+Recovery/removal checks also passed. Reports and source manifests are
+preserved beside each private role build; previous builds were backed up.
+Stock, non-linked JTBUBL integration lint also passed.
+
+An additional profile at 810,948 frame clocks with an 809,948-clock peer
+offset passed 22 brief-outage cases and all 248 individual bit flips in each
+direction. It checked 129 Host and 130 Join input frames before reset. Its
+sustained-loss assertion initially sampled too early for that extreme phase;
+the final test observes four frame periods, including clock-crossing latency,
+and confirms a missing-input reset on both peers. This fourth profile is now
+part of the standard runner. The RTL is unchanged by that test adjustment.
+
+Private validation logs: `JTBUBL-Link2P/validation-20260915` below the artifact
+root. This remains a hardware-playtest candidate, not a reliability release.
+
 ## Stock baseline
 
 Status: verified through synthesis; not yet tested on a Pocket in this worktree.

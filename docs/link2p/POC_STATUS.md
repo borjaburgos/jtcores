@@ -20,8 +20,10 @@ inconclusive. Pause runs are disabled pending independent memory models.
 
 The [review](REVIEW-20260915.md) records generalization requirements, limitations,
 and release gates; [results](RESULTS.md) record measured fault coverage.
-Next: passing FPGA timing/builds, matched ROM-free packages, then diagnostic
-and real gameplay tests with the two Pockets. No upstream PR or SD formatting.
+All four FPGA variants now pass timing on seed 0 from source `49991dad6` /
+Pocket `d31d180`. An additional nearly-full-frame peer offset also passes
+22 short-outage cases. Next: matched ROM-free packaging, then diagnostic and
+real gameplay tests with the two Pockets. No upstream PR or SD formatting.
 
 ## 2026-08-27 — preflight and stock baseline
 

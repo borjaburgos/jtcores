@@ -117,9 +117,10 @@ screenshots remain under `PRIVATE_ARTIFACT_ROOT` and are not packaged.
 The package target refuses a dirty source tree; a ROM, output, or preserved
 build path inside the Git worktree; a non-absolute ROM or output path; a
 role/mode mismatch; or mixed JTCORES/Pocket source commits across the four
-preserved builds. The preserved Pocket commit must also equal the currently
-pinned Pocket commit, preventing old bitstreams from acquiring new protocol
-metadata. It hashes the ROM but does not copy it into the generated
+preserved builds. The preserved Pocket source must also match the currently
+pinned Pocket source outside `ver/`, preventing old bitstreams from acquiring
+new protocol metadata while allowing later test-only changes. Bitstream and
+packaging commits are recorded separately. It hashes the ROM but does not copy it into the generated
 bundle. The bundle is named after the bitstream source commit and contains four
 unique, coexistable packages: normal Host and Join, plus always-visible
 diagnostic Host and Join.

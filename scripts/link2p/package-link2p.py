@@ -428,7 +428,13 @@ def main() -> int:
 
     super_commit = run_git(repo, "rev-parse", "HEAD")
     pocket_commit = run_git(pocket_repo, "rev-parse", "HEAD")
-    if str(host_source_manifest["pocket_commit"]) != pocket_commit:
+    # Tests can evolve after fitting without changing the bitstream source.
+    # Any non-test Pocket difference still forbids relabeling a preserved RBF.
+    pocket_changes = run_git(
+        pocket_repo, "diff", "--name-only",
+        str(host_source_manifest["pocket_commit"]), pocket_commit,
+    ).splitlines()
+    if any(not path.startswith("ver/") for path in pocket_changes):
         raise RuntimeError("preserved Pocket builds do not match the protocol source being packaged")
     dirty = bool(run_git(repo, "status", "--porcelain")) or bool(
         run_git(pocket_repo, "status", "--porcelain")

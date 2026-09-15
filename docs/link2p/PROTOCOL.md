@@ -112,8 +112,10 @@ The session captures a stable synchronized video CRC eight `clk48` cycles
 after the game blanking marker. Its tag names that completed logical frame,
 independently of the input target. After five warm-up frames, only matching
 CRC frame tags authorize comparison. A genuine same-frame mismatch faults;
-different-frame fingerprints are not compared. CRC agreement checks visible
-output, not all hidden game state.
+different-frame fingerprints are not compared. Packet loss or an extreme peer
+phase can prevent a particular frame from being compared; this is not an
+every-frame acknowledgement. CRC agreement checks visible output, not all
+hidden game state.
 
 Preserved target nets expose enable, role, peer/session status, session ID,
 TX/RX sequence, last valid input frame, CRC/stale/duplicate flags, role
