@@ -148,6 +148,18 @@ class ProgressModel:
             state = "building"
             message = "Compiling the dual-JTBUBL Verilator model."
 
+        # The original harness fed B from A's SDRAM response. Its staggered
+        # execution comparisons must not be presented as a valid recovery test.
+        if plan.get("memory_models") != "independent":
+            state = "inconclusive"
+            message = (
+                "Historical pause experiment: shared SDRAM responses invalidate "
+                "the rejoin conclusion. Independent memory models are required."
+            )
+            for case in cases:
+                if case["state"] in {"pass", "fail", "verified"}:
+                    case["state"] = "inconclusive"
+
         return {
             "state": state,
             "message": message,

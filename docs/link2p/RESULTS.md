@@ -49,6 +49,16 @@ reconnection controls, and the existing JTBUBL RAM-clear test.
 Quartus timing, packaged bitstreams, and handled-device gameplay remain
 separate release gates; record them below as they complete.
 
+The first CRC-32 synthesis probe (`1b0fa7cd4` / Pocket `bc9add4`) failed setup
+by 13.156 ns on the path from session state through the full combinational
+packet checksum to serial `tx_shift[9]`. No failing build was installed or
+preserved as a passing role. The revised publisher processes one byte per
+clock and atomically publishes payload plus CRC every 28 clocks. All eight
+unit benches, Host/Join lint, and the three fault-sweep profiles pass again;
+the session test also independently checks each published packet's CRC.
+The accelerated protocol benches now use a 64-clock inter-slot gap, satisfying
+the publisher's explicit freshness bound; production remains at 768 clocks.
+
 ## Stock baseline
 
 Status: verified through synthesis; not yet tested on a Pocket in this worktree.

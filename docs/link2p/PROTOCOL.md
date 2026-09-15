@@ -48,8 +48,15 @@ against every possible corruption.
 992 microseconds, followed by a 16-microsecond low-SCK framing gap: about 16.8
 slots per 59.19 Hz frame. Join detects a gap after eight microseconds low,
 four normal half-bit intervals. SCK/SI pass through explicit synchronizers.
-Receive CRC accumulates per bit; transmit CRC is calculated before the slot
-snapshot. Both role builds must pass timing analysis.
+Receive CRC accumulates per bit. Transmit CRC accumulates one byte per clock
+over a frozen payload; a complete, coherent packet is published every 28
+clocks (about 0.583 microseconds) for the next serial-slot snapshot. This
+avoids a full-packet combinational checksum path. Both role builds must pass
+timing analysis.
+
+The Pocket adapter requires at least 64 clocks of inter-slot gap so a receive
+sequence change is published before the next slot. Production uses 768;
+accelerated tests use 64, not the old 24-clock test-only gap.
 
 ## Startup and recovery
 
