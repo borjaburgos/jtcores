@@ -12,19 +12,20 @@ protocol 2 / build `0x4c325003`. No JTBUBL gameplay RTL changed.
 
 The real-wire Verilator suite passed at these simulated frame/phase profiles:
 
-| Frame clocks at 48 MHz | Peer phase | Brief outages passed | Inputs checked per peer |
+| Frame clocks at 48 MHz | Peer phase | Brief outages passed | Input frames checked (Host/Join) |
 | --- | --- | --- | --- |
-| 810,948 (~59.19 Hz) | 317 clocks | 23 | 135 frames |
-| 800,000 (60 Hz) | 300,000 clocks | 22 | 130 frames |
-| 960,000 (50 Hz) | 450,000 clocks | 22 | 125 frames |
+| 810,948 (~59.19 Hz) | 317 clocks | 23 | 135/135 |
+| 800,000 (60 Hz) | 300,000 clocks | 22 | 130/130 |
+| 960,000 (50 Hz) | 450,000 clocks | 22 | 125/125 |
+| 810,948 (~59.19 Hz) | 809,948 clocks | 22 | 129/130 |
 
 Each profile also corrupted every one of the 248 packet bits in both
 directions, with clean slots between damaged slots. Both peers detected all
-248 corruptions per profile (1,488 individual endpoint-bit injections total).
+248 corruptions per profile (1,984 individual endpoint-bit injections total).
 Outages covered 0.1, 1, and 5 ms on both data directions and SCK, an eight-phase
 5 ms sweep, the Join application boundary, and SCK held high. Every applied
 P1/P2 sample—including changing Coin/Start—matched the independent scoreboard.
-Each profile then held all wires disconnected for three frames: both peers
+Each profile then held all wires disconnected for four frames: both peers
 reset with a missing-input deadline, as required.
 
 In the nearly aligned profile, an 18.89475 ms outage spanning an entire
@@ -86,6 +87,12 @@ part of the standard runner. The RTL is unchanged by that test adjustment.
 
 Private validation logs: `JTBUBL-Link2P/validation-20260915` below the artifact
 root. This remains a hardware-playtest candidate, not a reliability release.
+
+ROM-free bundle `JTBUBL-Link2P/49991da` passed its complete `SHA256SUMS`
+verification. All four role manifests identify protocol 2, build `0x4c325003`,
+and source version `49991da`. Normal and diagnostic installer dry runs passed
+against an empty Pocket-directory fixture without writing any files. The ROM
+was hashed externally, not included in the bundle. No SD card was modified.
 
 ## Stock baseline
 

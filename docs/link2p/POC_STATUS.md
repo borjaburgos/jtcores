@@ -6,7 +6,7 @@ Implemented protocol 2 / build `0x4c325003`: stronger packet CRC, repeated
 input history, frame-tagged video checks, persistent fault/recovery counters,
 and a transport-independent session module with per-core identity.
 
-The 48 MHz/250 kHz simulation passed 67 short-outage cases across three
+The 48 MHz/250 kHz simulation passed 89 short-outage cases across four
 frame/phase profiles and every packet-bit corruption in both directions.
 An approximately 18.895 ms interruption recovers from input history in the
 nearly aligned case. Sustained loss still resets safely. Eight unit benches
@@ -20,10 +20,11 @@ inconclusive. Pause runs are disabled pending independent memory models.
 
 The [review](REVIEW-20260915.md) records generalization requirements, limitations,
 and release gates; [results](RESULTS.md) record measured fault coverage.
-All four FPGA variants now pass timing on seed 0 from source `49991dad6` /
-Pocket `d31d180`. An additional nearly-full-frame peer offset also passes
-22 short-outage cases. Next: matched ROM-free packaging, then diagnostic and
-real gameplay tests with the two Pockets. No upstream PR or SD formatting.
+All four FPGA variants pass timing on seed 0 from source `49991dad6` /
+Pocket `d31d180`. ROM-free bundle `49991da` has verified hashes, consistent
+protocol/build IDs, and passing normal/diagnostic installer dry runs. Next:
+diagnostic and real gameplay tests with the two Pockets. No upstream PR,
+SD formatting, or protocol-2 installation has been performed.
 
 ## 2026-08-27 — preflight and stock baseline
 
