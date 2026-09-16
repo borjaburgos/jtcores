@@ -15,7 +15,7 @@ review preparation.
 
 ## First review slice: standalone transport
 
-Local Pocket branch: `codex/link2p-transport-review`, commit `d82fa0a`.
+Local Pocket branch: `borjaburgos/link2p-transport-review`, commit `d82fa0a`.
 It starts from upstream `5a982f8`, not the historical POC base. The separate
 worktree is `../pocket-link2p-review` relative to the JTCORES checkout.
 Its push destination is explicitly the user's `borjaburgos/pocket` origin;
