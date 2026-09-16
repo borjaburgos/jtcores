@@ -22,7 +22,8 @@ It starts from upstream `5a982f8`, not the historical POC base. The separate
 worktree is `../pocket-link2p-review` relative to the JTCORES checkout.
 Its push destination is explicitly the user's `borjaburgos/pocket` origin;
 it does not track an upstream branch for pushing. This review is shared as a
-branch in the user's fork; no PR or release has been opened.
+branch in the user's fork; no upstream PR has been opened. The separate
+experimental binary handoff below contains the full POC, not this review slice.
 
 | File | Lines | Purpose |
 | --- | ---: | --- |
@@ -81,6 +82,27 @@ has been prepared against it yet. These are proposed review boundaries, not
 already-completed follow-up PRs. Ask JOTEGO whether to submit transport first
 or use it as the first commit in a coordinated series before opening an
 upstream PR.
+
+## Experimental binary handoff — 2026-09-16
+
+[ROM-free evaluation kit](https://github.com/borjaburgos/pocket/releases/tag/link2p-poc-49991da)
+in the private Pocket fork; JOTEGO has access. Its tag points to the binary
+Pocket source `d31d180`, not the transport-review branch. It contains the four
+unchanged `49991da` bitstreams, package metadata, licenses, Spanish installation
+and test instructions, and SHA-256 checksums. No ROM, firmware, private reports,
+or SD-card data is included. The restart-loop limitation is explicit.
+
+The allowlisted package reproduced byte-for-byte, passed extraction checks,
+and was downloaded from GitHub and compared with the original upload. Both
+standalone transport suites passed again on September 16 (Icarus divider 8,
+Verilator divider 96, both CRC widths). This is a packaging/test refresh, not
+a new synthesis, hardware playtest, or fix. The five-file review is unchanged.
+
+Before proposing behavioral fixes, the next correctness pass should model
+independent SDRAM for each game and preserve MCU RAM on reset as hardware does.
+Then test real gameplay through cable loss, a new session, Select/Start, and
+sustained post-restart gameplay. Capture the initiating fault on both Pockets
+if the intermittent loop returns; passing unit tests alone does not close it.
 
 ## Kept outside the first PR
 

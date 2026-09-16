@@ -12,6 +12,11 @@ but intermittent NOTICE/debug reboot loops after cable recovery remain
 unresolved. This is not a reliability release. See [current status](docs/link2p/POC_STATUS.md),
 [test results](docs/link2p/RESULTS.md), and [troubleshooting](docs/link2p/TROUBLESHOOTING.md).
 
+An [experimental ROM-free test kit](https://github.com/borjaburgos/pocket/releases/tag/link2p-poc-49991da)
+is available in the private Pocket fork for reviewers with access. It contains
+the unchanged `49991da` binaries, Spanish instructions, source IDs, and checksums;
+it does not fix the restart issue.
+
 Work remains in `borjaburgos/*`; no upstream PR is open. Link2P development by
 Borja Burgos, with assistance from OpenAI Codex. The upstream project follows.
 
