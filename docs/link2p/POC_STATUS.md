@@ -1,54 +1,51 @@
 # JTBUBL Link2P POC status
 
-## 2026-09-15 — reusable protocol and brief-error tolerance
+## Current status — 2026-09-15
 
-Implemented protocol 2 / build `0x4c325003`: stronger packet CRC, repeated
-input history, frame-tagged video checks, persistent fault/recovery counters,
-and a transport-independent session module with per-core identity.
+**Gameplay works; clean cable-recovery restart remains unresolved.** Candidate
+`49991da`, protocol 2 / build `0x4c325003`, runs at 250 kHz with CRC-32,
+repeated input history, frame-tagged video checks, and persistent fault counters.
+Both Pockets execute and render the complete game locally.
 
-The 48 MHz/250 kHz simulation passed 89 short-outage cases across four
-frame/phase profiles and every packet-bit corruption in both directions.
-An approximately 18.895 ms interruption recovers from input history in the
-nearly aligned case. Sustained loss still resets safely. Eight unit benches
-and Host/Join integration lint pass. This is simulation evidence, not a claim
-that the spontaneous physical resets are fixed.
+All four normal/diagnostic role builds passed FPGA timing on seed 0. They were
+installed and read-back verified on both 32 GB cards, with firmware 2.6 and
+matching ROMs. The user reported diagnostics and real two-player gameplay
+working with the Analogue cable. Duration, levels, counter deltas, and role
+swaps were not recorded; this is not an endurance or multi-cable pass.
 
-Review exposed and reproduced a CRC-8 collision under a brief simulated
-outage; the CRC-32 regression rejects it. It also found that the old staggered
-pause harness shares A's SDRAM response with B, making that result
-inconclusive. Pause runs are disabled pending independent memory models.
+After cable disconnect/reconnection, the user reported intermittent NOTICE
+reboot loops with the debug screen reappearing. Select still added credits and
+occasionally advanced the game. The behavior later stopped reproducing
+reliably, but no fix has been established. The initiating fault code is unknown.
+Capture both screens during a recurrence before altering the reset policy.
 
-The [review](REVIEW-20260915.md) records generalization requirements, limitations,
-and release gates; [results](RESULTS.md) record measured fault coverage.
-All four FPGA variants pass timing on seed 0 from source `49991dad6` /
-Pocket `d31d180`. ROM-free bundle `49991da` has verified hashes, consistent
-protocol/build IDs, and passing normal/diagnostic installer dry runs.
+The ROM-free unit suite passes, but does not prove post-reset gameplay. A
+focused probe confirmed that MCU internal RAM is cleared in simulation and
+retained in hardware; its causal connection to this loop is unproven. The old
+pause harness also shares one SDRAM response between instances, so its pause
+result remains inconclusive. Hardware-faithful reset and independent-memory
+tests are still needed. See [results](RESULTS.md) and [troubleshooting](TROUBLESHOOTING.md).
 
-Protocol 2 was installed on both 32 GB cards on September 15: Black UUID
-`0403-0201` and White UUID `D9C0-15E7`. Both have all four normal/diagnostic
-Host/Join packages and matching ROMs. The previous Link2P files were backed
-up locally and replaced files were also backed up on-card. After flushing and
-remounting read-only, all 152 package/ROM file comparisons passed; both cards
-were safely unmounted. Firmware remains 2.6. The apparent read-only workspace
-mount was again a sandbox boundary, not filesystem damage; no repair or
-formatting was needed. No 64 GB card or unrelated core was modified.
+The interruption sweep recovered 48.25 ms in a favorable simulated case;
+14.00 ms passed all 80 sampled timing/wire combinations. These are finite
+simulation results, not guaranteed hardware limits. See [INTERRUPTION_LIMITS.md](INTERRUPTION_LIMITS.md).
 
-The user subsequently reported a diagnostic pass and successful actual
-two-player gameplay with the Analogue cable. Duration, level count, counter
-deltas, role-swap testing, and the new build's deliberate disconnect/restart
-results were not supplied. Record this as a user-reported functional gameplay
-pass, not a completed endurance or multi-cable stability campaign.
+## Review and repository layout
 
-Next: prepare a small upstream review series while preserving this tested
-candidate and its evidence. No upstream PR has been opened for protocol 2.
+- [Pocket transport review](https://github.com/borjaburgos/pocket/tree/borjaburgos/link2p-transport-review):
+  `ad830ca`, based on upstream `5a982f8`; five added files / 553 lines, including
+  221 unchanged HDL lines, focused tests, and interface/limitation notes.
+  No existing upstream files change; this slice does not enable gameplay.
+- [Full JTCORES POC](https://github.com/borjaburgos/jtcores/tree/borjaburgos/jtbubl-link2p-poc)
+  and [Pocket POC](https://github.com/borjaburgos/pocket/tree/borjaburgos/jtbubl-link2p-poc)
+  preserve the experimental implementation and history, not the proposed PR.
+- [Review plan](UPSTREAM_REVIEW.md) separates transport, session, Pocket
+  integration, and JTBUBL enablement. No upstream PR or release is open.
 
-The first separate review branch is now prepared in the Pocket repository:
-`borjaburgos/link2p-transport-review` at `d82fa0a`, based on current upstream
-`5a982f8`. It contains five added files / 548 lines, with the 221-line serial
-HDL unchanged from the candidate and independent focused tests. Both simulator
-suites and the original POC unit suite pass. It does not enable linked
-gameplay by itself. See [UPSTREAM_REVIEW.md](UPSTREAM_REVIEW.md) for the exact
-scope and later session/integration slices. Nothing has been published.
+Only fork branches/documentation were organized; production HDL, bitstreams,
+and SD cards are unchanged. Development by Borja Burgos with assistance from
+OpenAI Codex. Dated entries below retain historical branch names and results;
+the current status above supersedes earlier readiness claims.
 
 ## 2026-08-27 — preflight and stock baseline
 

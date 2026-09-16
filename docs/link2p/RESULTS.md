@@ -1,5 +1,32 @@
 # Link2P results
 
+## 2026-09-15 — intermittent hardware restart failure (unresolved)
+
+After the functional gameplay pass below, the user reported a NOTICE reboot
+loop following cable disconnect/reconnection. Select still added credits;
+it sometimes advanced the game, but resets also recurred. The diagnostic
+screen reappeared, indicating fresh link-session reset requests in the normal
+build. The initiating fault code was not captured. The user later could not
+reproduce the behavior reliably; this does not establish a fix.
+
+Clean post-disconnect restart is therefore an **open hardware release gate**
+for candidate `49991da`, protocol 2 / build `0x4c325003`. Earlier gameplay and
+older-build restart passes remain historical observations, not evidence that
+this candidate always recovers. No production code or package changed.
+
+The existing ROM-free unit suite still passed. A separate focused probe found
+that `jtframe_6801mcu` clears internal RAM under `SIMULATION`, but its hardware
+RAM instance retains contents. Four bytes written through the MCU wrapper's
+memory ports survived 10,000 reset clocks in the hardware branch and became
+zero in the simulation branch. The probe used a CPU bus-driving stub, not
+game execution. This confirms a validation blind spot, **not the cause of the
+hardware loop**; retained RAM is the shared MCU wrapper's documented behavior.
+Private probe/evidence: `JTBUBL-Link2P/reset-diagnosis-20260915-Igs3mi`.
+
+Next evidence: capture both diagnostic screens during a loop, distinguish the
+initiating fault from the peer's propagated fault, and reproduce that reset
+path with hardware-faithful memory behavior before changing reset policy.
+
 ## 2026-09-15 — interruption-duration boundary
 
 The unchanged protocol-2 candidate recovered **48.25 ms in a favorable
@@ -19,25 +46,21 @@ or hardware package changed.
 ## 2026-09-15 — protocol-2 error-tolerance candidate
 
 See [REVIEW-20260915.md](REVIEW-20260915.md) for scope, limitations, and the
-correction to the earlier pause interpretation. Hardware behavior has not yet
-been measured for this candidate.
+correction to the earlier pause interpretation. Hardware observations below
+are user-reported; no endurance campaign or fault-counter trace was recorded.
 
-Bundle `49991da` was subsequently installed on both 32 GB cards, Black UUID
-`0403-0201` and White UUID `D9C0-15E7`, with all four normal/diagnostic Host/Join
-variants. Both reported firmware 2.6. Existing Link2P files were archived
-locally before installation; replaced files were also backed up on-card.
-After flushing and remounting read-only, all 152 package/ROM file comparisons
-passed, including all eight bitstreams and eight ROM copies. Both filesystems
-were safely unmounted. No firmware, stock core, or 64 GB card was changed.
-Host-level mounts were writable despite the protected workspace's read-only
-view, so no FAT repair or remount-to-write workaround was necessary.
-Private install evidence: `JTBUBL-Link2P/install-20260915-xkzM63`.
+Bundle `49991da` was installed on both 32 GB cards with all four normal/diagnostic
+Host/Join variants. Both Pockets reported firmware 2.6. Previous Link2P files
+were backed up. After flushing and remounting read-only, all 152 package/ROM
+file comparisons passed, including eight bitstreams and eight ROM copies.
+Both cards were safely unmounted. No firmware, stock core, or 64 GB card was
+changed. Device records and install evidence remain private.
 
 The user then reported that diagnostics passed and confirmed actual gameplay
 using the Analogue cable. This is a user-reported functional pass on the
-installed candidate. Duration, levels reached, counter readings, role swaps,
-and deliberate disconnect/restart results were not recorded. The new build
-has not yet completed a documented endurance or multi-cable test campaign.
+installed candidate. Duration, levels reached, counter readings, and role
+swaps were not recorded. The later intermittent restart failure is documented
+above. The new build has not completed an endurance or multi-cable campaign.
 
 The 250 kHz protocol now uses CRC-32/MPEG-2, repeats current/previous inputs,
 and labels video fingerprints independently of the input target. Identity is

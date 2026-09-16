@@ -4,9 +4,10 @@
 
 The hardware candidate remains `49991da`, protocol 2 / build `0x4c325003`.
 The user reported diagnostics and real gameplay passing with the Analogue
-cable. Duration, counter readings, level count, role swaps, and deliberate
-restart results were not supplied; endurance and multi-cable validation
-remain open.
+cable. Duration, counter readings, level count, and role swaps were not
+supplied. A later intermittent NOTICE/debug reboot loop after cable recovery
+remains unresolved; it stopped reproducing reliably, but no fix was made.
+Clean restart, endurance, and multi-cable validation remain open gates.
 
 JTCORES `18d03b8a6` and Pocket `387949c` preserve the POC work, interruption
 measurements, installation evidence, and this hardware report. Existing POC
@@ -15,12 +16,13 @@ review preparation.
 
 ## First review slice: standalone transport
 
-Local Pocket branch: `borjaburgos/link2p-transport-review`, commit `d82fa0a`.
+Pocket fork branch: [`borjaburgos/link2p-transport-review`](https://github.com/borjaburgos/pocket/tree/borjaburgos/link2p-transport-review),
+commit `ad830ca`. [View the five-file diff](https://github.com/borjaburgos/pocket/compare/5a982f8a6fc74522cbe7e5e23219627f8ad054b6...ad830cad4419b45fd7060a206a9b3ab9008096c6).
 It starts from upstream `5a982f8`, not the historical POC base. The separate
 worktree is `../pocket-link2p-review` relative to the JTCORES checkout.
 Its push destination is explicitly the user's `borjaburgos/pocket` origin;
-it does not track an upstream branch for pushing. Nothing has been pushed
-and no PR has been opened.
+it does not track an upstream branch for pushing. This review is shared as a
+branch in the user's fork; no PR or release has been opened.
 
 | File | Lines | Purpose |
 | --- | ---: | --- |
@@ -28,9 +30,9 @@ and no PR has been opened.
 | `ver/link_serial/test.sv` | 176 | Asynchronous endpoint and fault tests |
 | `ver/link_serial/crc_test.sv` | 69 | Independent checksum vectors |
 | `ver/link_serial/sim.sh` | 24 | Standalone test entry point |
-| `ver/link_serial/README.md` | 58 | Interface, timing, scope, limitations |
+| `ver/link_serial/README.md` | 63 | Interface, timing, scope, limitations |
 
-Total: **5 added files, 548 lines, one cohesive commit**. No existing upstream
+Total: **5 added files, 553 lines, one cohesive commit**. No existing upstream
 file changes. The HDL is byte-identical to the tested candidate, SHA-256
 `96888f92ddb038d66833c82a6d155f1e6132a08520e1e1df86bceca022b5f952`.
 It is deliberately not in `cfg/files.yaml` or connected to pins yet; merging
@@ -90,3 +92,22 @@ The shared-memory gameplay harness still needs independent memory models
 before we can make independent dual-game or pause-equivalence claims. That
 work and documented sustained gameplay/restart tests are prerequisites for
 stronger integration claims, not evidence supplied by the transport-only PR.
+The simulation/hardware MCU RAM-reset discrepancy is also a coverage gap,
+not a demonstrated explanation for the hardware reboot loop.
+
+## Fork navigation and provenance
+
+The full POC branches in both forks are now named
+`borjaburgos/jtbubl-link2p-poc`. Their existing commit history is preserved;
+dated development logs retain the original branch names. `master` remains
+the untouched baseline. The full POC is not the proposed upstream diff.
+Its Pocket submodule URL points to `borjaburgos/pocket`, where the pinned POC
+commits are published. That fork remains private; reviewers need access.
+JOTEGO's access was verified. This fork-only URL change is not part of the
+transport review or a proposed upstream configuration change.
+
+The unpublished transport extraction `d82fa0a` was amended to `ad830ca` only
+to add the new hardware limitation and Codex-assistance note to its guide.
+Its HDL and executable tests are identical. These five documentation lines
+are the difference between the original 548-line slice and the 553-line slice.
+Link2P development by Borja Burgos with assistance from OpenAI Codex.

@@ -48,11 +48,10 @@
 	url = git@github.com:jotego/jt900h.git
 [submodule "modules/jtframe/target/pocket"]
 	path = modules/jtframe/target/pocket
-	url = git@github.com:jotego/pocket.git
+	url = https://github.com/borjaburgos/pocket.git
 [submodule "modules/jt539"]
 	path = modules/jt539
 	url = https://github.com/jotego/jt539.git
 [submodule "modules/jt680x/crasm"]
 	path = modules/jt680x/crasm
 	url = git@github.com:colinbourassa/crasm.git
-

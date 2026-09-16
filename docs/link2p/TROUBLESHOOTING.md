@@ -46,19 +46,32 @@ Record the first logical frame and both fingerprints. Check, in order: ROM/DIP/b
 
 ## NOTICE loop after a gameplay cable reconnect
 
-Cable removal intentionally stops both games and selects the diagnostic
-screen. The corrected normal build negotiates a fresh session after reconnect,
-clears Link2P-visible JTBUBL work and MCU communication RAM while reset is
-held, and returns both systems to a clean NOTICE screen. Credits plus Start
-must begin a new game without exiting either core. This deliberately discards
-the interrupted game; seamless preservation or resumption of live-game state
-is outside the POC scope.
+Sustained cable loss intentionally stops both games and selects the diagnostic
+screen. Recovery is intended to negotiate a fresh session, clear JTBUBL work
+and MCU communication RAM, and permit a new game through Select and Start.
+The interrupted game's progress is discarded; live-game resume is unsupported.
 
-If Start loops back to NOTICE, first verify corrected normal bitstreams (Host
-SHA-256 `03fc0edf0f6082e3f31901968c3638a4eaae7679ee1f0fdbeef104ddec026fd3`,
-Join SHA-256 `bbb0bf74c7cb53c00b9de7665e9afba390b9ea6232c9e9b590cb78f38abf947b`).
-Exit and relaunch Join followed by Host only as a fallback, and preserve the
-build manifests plus the first visible diagnostic state for investigation.
+Candidate `49991da` / protocol 2 / build `0x4c325003` has an unresolved,
+intermittent NOTICE/debug reboot loop after cable recovery. Select can still
+register credits or advance the screen without reliably curing the loop.
+Successful retries do not close the issue. See [RESULTS.md](RESULTS.md).
+
+- Verify both normal-role manifests match the candidate; compare bitstream
+  hashes against that bundle's `SHA256SUMS`, not an older release's hashes.
+- Capture both screens through a loop before exiting the cores. In normal
+  builds, the checkerboard reappearing means another link reset was requested.
+- The first four cells immediately below the top status band show the last
+  fault, most-significant bit first: 3 = peer fault, 4 = timeout, 5 = input
+  fault, 6 = video mismatch. One endpoint may only show the propagated fault.
+- Record whether cable removal occurred during gameplay or at NOTICE, and
+  preserve role/build identity and the visible counters. Do not infer the
+  initiating fault solely from Select still working.
+- Exiting both cores and relaunching Join followed by Host is a fallback that
+  previously restored gameplay, not a fix or a current reliability guarantee.
+
+The MCU's internal RAM differs between simulation and hardware reset behavior;
+this is a confirmed test-coverage gap, not yet a diagnosed cause. Do not disable
+video checks or relax input deadlines merely to hide the symptom.
 
 ## Quartus failures
 

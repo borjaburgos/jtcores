@@ -96,7 +96,7 @@ for offset in {0..45360..3024}; do
 done
 ```
 
-The published supplementary logs also include 46–46.75 and 50.25 ms samples
+The private supplementary logs also include 46–46.75 and 50.25 ms samples
 at startup offsets 0 and 24,192 clocks. The command above reproduces the
 best-case bracket at all 16 alignments without those redundant outer points.
 

@@ -1,3 +1,20 @@
+# Bubble Bobble Link2P — development fork
+
+Two Analogue Pockets run the complete game locally and exchange controls over
+a GB/GBC link cable. No video is sent over the cable.
+
+For review, start with the [small Pocket transport branch](https://github.com/borjaburgos/pocket/tree/borjaburgos/link2p-transport-review)
+and the [review plan](docs/link2p/UPSTREAM_REVIEW.md). This branch preserves the
+full experimental POC; it is not the proposed upstream PR.
+
+**Status:** two-player gameplay was reported working with the Analogue cable,
+but intermittent NOTICE/debug reboot loops after cable recovery remain
+unresolved. This is not a reliability release. See [current status](docs/link2p/POC_STATUS.md),
+[test results](docs/link2p/RESULTS.md), and [troubleshooting](docs/link2p/TROUBLESHOOTING.md).
+
+Work remains in `borjaburgos/*`; no upstream PR is open. Link2P development by
+Borja Burgos, with assistance from OpenAI Codex. The upstream project follows.
+
 # JTCORES FPGA Arcade Hardware by Jose Tejada (@topapate)
 
 You can show your appreciation through
