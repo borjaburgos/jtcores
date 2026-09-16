@@ -42,6 +42,14 @@ pass, not a completed endurance or multi-cable stability campaign.
 Next: prepare a small upstream review series while preserving this tested
 candidate and its evidence. No upstream PR has been opened for protocol 2.
 
+The first separate review branch is now prepared in the Pocket repository:
+`codex/link2p-transport-review` at `d82fa0a`, based on current upstream
+`5a982f8`. It contains five added files / 548 lines, with the 221-line serial
+HDL unchanged from the candidate and independent focused tests. Both simulator
+suites and the original POC unit suite pass. It does not enable linked
+gameplay by itself. See [UPSTREAM_REVIEW.md](UPSTREAM_REVIEW.md) for the exact
+scope and later session/integration slices. Nothing has been published.
+
 ## 2026-08-27 — preflight and stock baseline
 
 ### Repositories
