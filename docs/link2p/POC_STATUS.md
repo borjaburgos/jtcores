@@ -22,9 +22,25 @@ The [review](REVIEW-20260915.md) records generalization requirements, limitation
 and release gates; [results](RESULTS.md) record measured fault coverage.
 All four FPGA variants pass timing on seed 0 from source `49991dad6` /
 Pocket `d31d180`. ROM-free bundle `49991da` has verified hashes, consistent
-protocol/build IDs, and passing normal/diagnostic installer dry runs. Next:
-diagnostic and real gameplay tests with the two Pockets. No upstream PR,
-SD formatting, or protocol-2 installation has been performed.
+protocol/build IDs, and passing normal/diagnostic installer dry runs.
+
+Protocol 2 was installed on both 32 GB cards on September 15: Black UUID
+`0403-0201` and White UUID `D9C0-15E7`. Both have all four normal/diagnostic
+Host/Join packages and matching ROMs. The previous Link2P files were backed
+up locally and replaced files were also backed up on-card. After flushing and
+remounting read-only, all 152 package/ROM file comparisons passed; both cards
+were safely unmounted. Firmware remains 2.6. The apparent read-only workspace
+mount was again a sandbox boundary, not filesystem damage; no repair or
+formatting was needed. No 64 GB card or unrelated core was modified.
+
+The user subsequently reported a diagnostic pass and successful actual
+two-player gameplay with the Analogue cable. Duration, level count, counter
+deltas, role-swap testing, and the new build's deliberate disconnect/restart
+results were not supplied. Record this as a user-reported functional gameplay
+pass, not a completed endurance or multi-cable stability campaign.
+
+Next: prepare a small upstream review series while preserving this tested
+candidate and its evidence. No upstream PR has been opened for protocol 2.
 
 ## 2026-08-27 — preflight and stock baseline
 

@@ -1,10 +1,43 @@
 # Link2P results
 
+## 2026-09-15 — interruption-duration boundary
+
+The unchanged protocol-2 candidate recovered **48.25 ms in a favorable
+real-wire simulation**, but failed at 48.50 ms in that configuration.
+**14.00 ms passed all 80 sampled timing/wire combinations**; the most
+sensitive configuration failed at 14.25 ms. Nearly aligned peers had
+per-scenario maxima of 31.00–47.25 ms in the fixed-phase matrix.
+
+The main sweep ran 1,514 trials plus 218 favorable-timing trials and 80
+corrected zero-interruption controls. Every failure was a missing-input
+deadline; no incorrect applied input was observed. These are finite simulated
+bounds, not physical Pocket reliability or a universal guaranteed tolerance.
+See [INTERRUPTION_LIMITS.md](INTERRUPTION_LIMITS.md) for method, exact boundary
+cases, limitations, evidence, and reproduction commands. No production RTL
+or hardware package changed.
+
 ## 2026-09-15 — protocol-2 error-tolerance candidate
 
 See [REVIEW-20260915.md](REVIEW-20260915.md) for scope, limitations, and the
 correction to the earlier pause interpretation. Hardware behavior has not yet
 been measured for this candidate.
+
+Bundle `49991da` was subsequently installed on both 32 GB cards, Black UUID
+`0403-0201` and White UUID `D9C0-15E7`, with all four normal/diagnostic Host/Join
+variants. Both reported firmware 2.6. Existing Link2P files were archived
+locally before installation; replaced files were also backed up on-card.
+After flushing and remounting read-only, all 152 package/ROM file comparisons
+passed, including all eight bitstreams and eight ROM copies. Both filesystems
+were safely unmounted. No firmware, stock core, or 64 GB card was changed.
+Host-level mounts were writable despite the protected workspace's read-only
+view, so no FAT repair or remount-to-write workaround was necessary.
+Private install evidence: `JTBUBL-Link2P/install-20260915-xkzM63`.
+
+The user then reported that diagnostics passed and confirmed actual gameplay
+using the Analogue cable. This is a user-reported functional pass on the
+installed candidate. Duration, levels reached, counter readings, role swaps,
+and deliberate disconnect/restart results were not recorded. The new build
+has not yet completed a documented endurance or multi-cable test campaign.
 
 The 250 kHz protocol now uses CRC-32/MPEG-2, repeats current/previous inputs,
 and labels video fingerprints independently of the input target. Identity is
