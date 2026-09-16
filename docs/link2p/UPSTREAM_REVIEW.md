@@ -79,7 +79,8 @@ is being claimed.
 Current JTCORES upstream was inspected at `e7958c86d`; no integration branch
 has been prepared against it yet. These are proposed review boundaries, not
 already-completed follow-up PRs. Ask JOTEGO whether to submit transport first
-or use it as the first commit in a coordinated series before publishing.
+or use it as the first commit in a coordinated series before opening an
+upstream PR.
 
 ## Kept outside the first PR
 
@@ -101,6 +102,8 @@ The full POC branches in both forks are now named
 `borjaburgos/jtbubl-link2p-poc`. Their existing commit history is preserved;
 dated development logs retain the original branch names. `master` remains
 the untouched baseline. The full POC is not the proposed upstream diff.
+JTCORES opens the full POC by default; Pocket opens the focused transport
+review. Both forks' About links point to their review guides.
 Its Pocket submodule URL points to `borjaburgos/pocket`, where the pinned POC
 commits are published. That fork remains private; reviewers need access.
 JOTEGO's access was verified. This fork-only URL change is not part of the
